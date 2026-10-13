@@ -1,0 +1,47 @@
+# 鲁棒性/OOD/先验偏差/Level2配置（依据开题报告第9章、式(35)(36)）
+robustness:
+  # 连续难度sweep（开题：SNR -10→+10dB, PFA 0.01→0.15, N 8→64）
+  sweeps:
+    snr_offsets_db: [-10.0, -6.0, -3.0, 0.0, 3.0, 6.0, 10.0]
+    pfa_values: [0.01, 0.03, 0.05, 0.08, 0.10, 0.12, 0.15]
+    n_sectors_values: [8, 16, 24, 32, 48, 64]
+
+  # OOD条件（训练分布之外，B7决策）
+  ood:
+    id:                        # 分布内基线（Medium, 固定测试场景）
+      {difficulty: medium}
+    ood_snr:
+      {difficulty: medium, snr_offset_db: 8.0}    # 训练抖动±3dB之外
+    ood_pfa:
+      {difficulty: medium, pfa: 0.15}              # 训练上限0.12之外
+    ood_n:
+      {difficulty: medium, n_sectors: 48}          # 训练最大32之外
+    ood_prior:
+      {difficulty: medium, prior_type: adversarial} # 训练未见对抗先验
+    ood_reverb:
+      {difficulty: medium, reverberation_rnr_db: 9.0} # 强混响（默认3dB）
+
+  episodes_per_condition: 500   # sweep用500（表7允许范围≥500）；OOD在ood节单独控制
+
+prior_bias:
+  prior_types: [uniform, correct, biased, adversarial]
+  difficulty: medium
+  episodes: 1000
+  # 记录每步信念→KL(belief‖true one-hot)演化（式(36)）+纠偏曲线
+  save_belief_trajectories: true
+  belief_traj_episodes: 50    # 保存完整信念轨迹的回合数（用于热图）
+
+level2_validation:
+  algorithms: [sequential, belief_greedy, ppo, muzero]   # 第19章：PPO或DQN中较稳定者
+  episodes: 300
+  difficulties: [easy, medium, hard]
+
+smoke:
+  robustness:
+    episodes_per_condition: 20
+    sweeps:
+      snr_offsets_db: [-3.0, 3.0]
+      pfa_values: [0.05, 0.10]
+      n_sectors_values: [16, 32]
+  prior_bias: {episodes: 20, belief_traj_episodes: 5}
+  level2_validation: {episodes: 5, algorithms: [sequential, belief_greedy, muzero]}

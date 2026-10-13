@@ -1,0 +1,39 @@
+muzero:
+  hidden_dim: 128
+  gru_hidden: 256
+  representation_fc: 256
+  dynamics_fc:
+  - 256
+  - 256
+  prediction_fc:
+  - 256
+  - 256
+  learning_rate: 0.0001
+  weight_decay: 0.0001
+  batch_size: 128
+  buffer_capacity: 50000
+  unroll_steps: 5
+  bootstrap_steps: 5
+  value_scale: 10.0
+  reward_scale: 10.0
+  train_every_steps: 32
+  min_buffer_episodes: 32
+  num_simulations: 50
+  planning_depth: 5
+  puct_c1: 1.25
+  puct_cbase: 19652
+  dirichlet_alpha: 0.3
+  dirichlet_weight: 0.25
+  temperature_initial: 1.0
+  temperature_final: 0.25
+  temperature_eval: 0.0
+  _v2_note: v2强化轮：超参由验证集sweep选定（best val SR=0.48, lr=0.0001, M=50）；sweep过程见results_v2/raw/hp_sweep.json。
+smoke:
+  muzero:
+    num_simulations: 12
+    planning_depth: 3
+    batch_size: 32
+    buffer_capacity: 500
+    train_every_steps: 16
+    min_buffer_episodes: 8
+    value_scale: 10.0

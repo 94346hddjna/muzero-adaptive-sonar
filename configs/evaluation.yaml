@@ -1,0 +1,17 @@
+# 评测配置（依据开题报告式(31)-(35)、第8章、第15章主实验）
+evaluation:
+  test_episodes: 1000        # 每难度≥1000评测回合（表7）
+  metrics:
+    edc_failure_penalty: 10.0   # 式(33) C_pen（B9决策）
+  sample_efficiency:
+    sr_threshold: 0.90       # 达到该成功率阈值所需环境步（仅实际达到时报告）
+  # 决策时延：评测时单独计时agent.act()（含MCTS）
+
+figures:
+  dpi: 300
+  formats: [png, pdf]
+  languages: [zh, en]        # 中文版+论文英文版
+
+smoke:
+  evaluation:
+    test_episodes: 20

@@ -1,0 +1,80 @@
+# 声呐环境配置（依据开题报告式(6)-(14)、表2、表4）
+environment:
+  # 物理常数（式(8)：R=cτ/2）
+  sound_speed: 1500.0            # m/s
+  absorption_coeff: 0.001        # dB/m, α_f（式(9)）
+  reference_range: 3000.0        # m, 校准参考距离
+
+  # 目标距离分布（B3决策，R~U[2000,4000]m）
+  range_min: 2000.0
+  range_max: 4000.0
+
+  # 波束方向性（式(10)：G=exp(-Δθ²/2σb²)，HPBW=2√(2ln2)σb≈扇区宽）
+  beam_hpbw_to_sector_width: 1.0  # 半功率束宽/扇区宽度
+
+  # 难度体系（表4）。PD_target为平均检测难度目标，由SNR_base校准实现（B2决策）。
+  # reverb_rnr_db实现表4"噪声/混响"列（低/中/高）：混响/噪声功率比折算并入背景项式(11)，
+  # 校准吸收其难度贡献（不与PD目标双重计难度）。OOD-Reverberation将超出Hard的6dB。
+  difficulties:
+    easy:
+      n_sectors: 8
+      pd_target: 0.95
+      pfa: 0.01
+      reverb_rnr_db: 0.0     # 表4: 噪声/混响 低/低
+      prior_type: correct        # 表4: Easy 初始先验"较集中"
+      prior_sigma_sectors: 1.0
+    medium:
+      n_sectors: 16
+      pd_target: 0.85
+      pfa: 0.05
+      reverb_rnr_db: 3.0     # 表4: 中/中
+      prior_type: correct        # 表4: Medium "中等弥散"
+      prior_sigma_sectors: 2.5
+    hard:
+      n_sectors: 32
+      pd_target: 0.70
+      pfa: 0.10
+      reverb_rnr_db: 6.0     # 表4: 高/高
+      prior_type: biased         # 表4: Hard "存在偏差"
+      prior_sigma_sectors: 1.5
+
+  # 规范网格：N∈{8,16,24,32,48,64}均整除192，单一固定维度网络可处理全部扇区数
+  # （表4三难度 + OOD-N到64 所必需，网络结构仍按表3的FC/GRU形式）
+  canonical_cells: 192
+  max_sectors: 64
+
+  # 奖励函数（式(16)，B1决策：λf=R_hit使虚警步净收益=漏检步）
+  reward:
+    R_hit: 10.0
+    lambda_s: 1.0               # 单步发射代价
+    lambda_f: 10.0              # 虚警惩罚
+    lambda_e: 0.1               # 能量成本系数
+    action_cost: 1.0            # C(a)：核心实验各动作成本相同（式(16)退化说明）
+
+  # 域随机化（训练分布，B7决策：标称Medium为主）
+  domain_randomization:
+    enabled: true
+    difficulty_probs: {easy: 0.25, medium: 0.50, hard: 0.25}
+    snr_jitter_db: 3.0           # SNR偏置 ±3 dB
+    pfa_jitter_factor: 1.2       # PFA × [1/1.2, 1.2]
+    prior_types: [uniform, correct, moderate, biased]   # 训练不含adversarial（留作OOD）
+    prior_sigma_jitter: 0.5
+
+  # 先验类型定义（式(4)初始信念，B12决策：环形高斯）
+  priors:
+    uniform:     {sigma: null}                    # b0=1/N
+    correct:     {center: target,    sigma: 1.0}  # 集中于真目标
+    moderate:    {center: target,    sigma: 2.5}  # 中等弥散
+    biased:      {center: random_other, sigma: 1.5}  # 集中于错误扇区
+    adversarial: {center: farthest,   sigma: 1.0}   # 对抗性错误先验
+
+level2:
+  # 信号级环境（式(6)-(8)）：复基带LFM + 匹配滤波 + 包络门限
+  fs: 48000.0          # 采样率 Hz
+  f0: 12000.0          # 中心频率 Hz
+  bandwidth: 8000.0    # 扫频带宽 B Hz
+  pulse_duration: 0.02 # 脉宽 Tp s
+  noise_sigma: 0.5     # 复基带噪声每样本σ（参考标度）
+  reverberation_rnr_db: 3.0   # 混响/噪声功率比(dB)，OOD-Reverberation将增大
+  consistency_tolerance: 0.03  # Level1↔Level2 PD/PFA一致性容差
+  window_padding: 0.005        # 接收窗前后padding s

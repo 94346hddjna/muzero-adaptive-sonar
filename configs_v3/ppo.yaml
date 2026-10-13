@@ -1,0 +1,20 @@
+# PPO配置（依据开题报告式(29)(30)、第7章基线5）
+ppo:
+  hidden_dims: [256, 256]
+  learning_rate: 3.0e-4
+  rollout_steps: 1280        # 每迭代采集环境步（64envs×20步）
+  minibatch_size: 256
+  epochs_per_update: 4
+  clip_epsilon: 0.2          # 式(30) ε
+  gamma: 0.99
+  gae_lambda: 0.95
+  entropy_coef: 0.01
+  value_coef: 0.5
+  max_grad_norm: 0.5
+  weight_decay: 1.0e-4       # AdamW
+
+smoke:
+  ppo:
+    rollout_steps: 320
+    minibatch_size: 64
+    epochs_per_update: 2

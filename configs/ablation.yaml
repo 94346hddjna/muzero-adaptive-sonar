@@ -1,0 +1,40 @@
+# 消融实验配置（依据开题报告表6，七组A-G全部实现）
+ablation:
+  # A: w/o MCTS（B8决策：同一训练模型，评测期关闭搜索）
+  wo_mcts:
+    enabled: true
+    description: "评测期直接用预测网络策略头选动作（训练目标不变）"
+
+  # B: MCTS模拟次数 M ∈ {25,50,100,200}（评测期扫描，主模型M=50）
+  simulations: [25, 50, 100, 200]
+
+  # C: 规划深度 ∈ {1,3,5,10}（评测期扫描，主模型D=5）
+  planning_depths: [1, 3, 5, 10]
+
+  # D: w/o belief（重训：移除b_t与m_t，仅用最近K步原始观测+GRU）
+  wo_belief:
+    enabled: true
+    history_window: 8        # 最近K步原始(a one-hot, d)
+
+  # E: w/o memory（重训：去除GRU，仅用当前观测向量）
+  wo_memory:
+    enabled: true
+
+  # F: w/o 域随机化（重训：固定Medium参数）
+  wo_domain_rand:
+    enabled: true
+
+  # G: 奖励设计（重训：稀疏式(16) vs 塑形PBRS，B14决策）
+  reward_design:
+    enabled: true
+    shaped:
+      type: potential_based   # Φ(b)=-c_sh·H(b)/lnN
+      shaping_coef: 1.0
+
+  seeds: [101, 102, 103, 104, 105]
+
+smoke:
+  ablation:
+    simulations: [8, 16]
+    planning_depths: [1, 3]
+    seeds: [101]

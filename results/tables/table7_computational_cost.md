@@ -1,0 +1,10 @@
+**Table 7: Computational cost (Medium condition)**
+
+| Method | Training wall-clock (s, mean) | Decision latency (ms, mean) | Decision latency (ms, std) | Env. steps budget |
+|---|---|---|---|---|
+| Sequential | — | 0.00 | 0.00 | — |
+| Random | — | 0.00 | 0.00 | — |
+| Belief-Greedy | — | 0.00 | 0.00 | — |
+| DQN | 148 | 0.05 | 0.01 | 1000000 |
+| PPO | 197 | 0.05 | 0.00 | 1000000 |
+| MuZero (ours) | 3716 | 5.22 | 0.82 | 1000000 |

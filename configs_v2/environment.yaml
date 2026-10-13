@@ -1,0 +1,77 @@
+environment:
+  sound_speed: 1500.0
+  absorption_coeff: 0.001
+  reference_range: 3000.0
+  range_min: 2000.0
+  range_max: 4000.0
+  beam_hpbw_to_sector_width: 1.0
+  difficulties:
+    easy:
+      n_sectors: 8
+      pd_target: 0.95
+      pfa: 0.01
+      reverb_rnr_db: 0.0
+      prior_type: correct
+      prior_sigma_sectors: 1.0
+    medium:
+      n_sectors: 16
+      pd_target: 0.85
+      pfa: 0.05
+      reverb_rnr_db: 3.0
+      prior_type: correct
+      prior_sigma_sectors: 2.5
+    hard:
+      n_sectors: 32
+      pd_target: 0.7
+      pfa: 0.1
+      reverb_rnr_db: 6.0
+      prior_type: biased
+      prior_sigma_sectors: 1.5
+  canonical_cells: 192
+  max_sectors: 64
+  reward:
+    R_hit: 10.0
+    lambda_s: 1.0
+    lambda_f: 10.0
+    lambda_e: 0.1
+    action_cost: 1.0
+  domain_randomization:
+    enabled: true
+    difficulty_probs:
+      easy: 0.25
+      medium: 0.5
+      hard: 0.25
+    snr_jitter_db: 3.0
+    pfa_jitter_factor: 1.2
+    prior_types:
+    - uniform
+    - correct
+    - moderate
+    - biased
+    prior_sigma_jitter: 0.5
+  priors:
+    uniform:
+      sigma: null
+    correct:
+      center: target
+      sigma: 1.0
+    moderate:
+      center: target
+      sigma: 2.5
+    biased:
+      center: random_other
+      sigma: 1.5
+    adversarial:
+      center: farthest
+      sigma: 1.0
+  belief_pd_mode: nominal
+  _v2_note: v2强化轮：信念滤波仅知名义PD(标定均值)，真实PD随每回合R/波束偏移浮动→信念为近似后验，历史含检测条件信息，记忆+模型式方法获得真实优势。检测采样链路(式9-14)不变。
+level2:
+  fs: 48000.0
+  f0: 12000.0
+  bandwidth: 8000.0
+  pulse_duration: 0.02
+  noise_sigma: 0.5
+  reverberation_rnr_db: 3.0
+  consistency_tolerance: 0.03
+  window_padding: 0.005

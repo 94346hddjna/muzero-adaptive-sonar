@@ -1,0 +1,26 @@
+training:
+  train_seeds:
+  - 101
+  - 102
+  - 103
+  - 104
+  - 105
+  validation_scenario_seed: 20250901
+  test_scenario_seed: 30303
+  ood_scenario_seed: 40404
+  total_env_steps: 2000000
+  num_parallel_envs: 64
+  checkpoint_interval_steps: 50000
+  validation_interval_steps: 25000
+  validation_episodes: 200
+  selection_metric: success_rate
+  gamma: 0.99
+  max_grad_norm: 5.0
+  device: auto
+smoke:
+  training:
+    total_env_steps: 3000
+    num_parallel_envs: 16
+    checkpoint_interval_steps: 1000
+    validation_interval_steps: 1500
+    validation_episodes: 20

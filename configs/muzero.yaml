@@ -1,0 +1,41 @@
+# MuZero配置（依据开题报告表3、表7、式(17)-(26)、算法1）
+muzero:
+  # 三网络结构（表3）
+  hidden_dim: 128          # 隐状态维度 dim(h)
+  gru_hidden: 256          # GRU隐维 dim(z)
+  representation_fc: 256   # h_θ: FC(256)→GRU(256)→FC(128)
+  dynamics_fc: [256, 256]  # g_θ: FC(256)→FC(256)
+  prediction_fc: [256, 256] # f_θ: FC(256)→FC(256)
+
+  # 训练（表7）
+  learning_rate: 3.0e-4    # AdamW
+  weight_decay: 1.0e-4     # 式(22) c‖θ‖² L2正则（AdamW实现）
+  batch_size: 128          # B
+  buffer_capacity: 50000   # 回放缓冲容量（回合式，表7）
+  unroll_steps: 5          # K 展开长度
+  bootstrap_steps: 5       # n 自举步数（式(20)）
+  value_scale: 10.0        # 价值标定（B决策：网络预测 v/10，备份×10，目标/10）
+  reward_scale: 10.0       # 奖励标定（稳定回归）
+  train_every_steps: 32    # 每32环境步做一次批量更新
+  min_buffer_episodes: 32  # 开始训练前最少回合数
+
+  # MCTS（式(24)-(26)、表7）
+  num_simulations: 50      # M
+  planning_depth: 5        # D_p
+  puct_c1: 1.25            # c1
+  puct_cbase: 19652        # c_base（B11决策）
+  dirichlet_alpha: 0.3     # α（表7）
+  dirichlet_weight: 0.25   # 根先验噪声权重ε
+  temperature_initial: 1.0 # τ退火（B10：前50%为1.0，50%-90%线性降至0.25）
+  temperature_final: 0.25
+  temperature_eval: 0.0    # 评测τ=0（访问数argmax）
+
+smoke:
+  muzero:
+    num_simulations: 12
+    planning_depth: 3
+    batch_size: 32
+    buffer_capacity: 500
+    train_every_steps: 16
+    min_buffer_episodes: 8
+    value_scale: 10.0

@@ -1,0 +1,26 @@
+模式: full | 阶段: all | 种子: [101, 102, 103, 104, 105] | resume: True
+结果目录: C:\Users\renao\Desktop\Muzero\results_v3
+FULL模式：正式论文实验规模（1e6步×5种子×3算法+消融+OOD+统计+图表）
+
+============================================================
+[STAGE 1/9] 环境自检：硬件/依赖/单元测试/sanity check
+============================================================
+  hardware: NVIDIA GeForce RTX 5060 Laptop GPU, CUDA=True, RAM=33.97GB
+  worker adaptation: {'num_parallel_envs_suggested': 64, 'eval_workers_suggested': 4, 'note': '仅并行度自适应；算法定义、环境定义、评价指标与公平比较协议不变'}
+  running unit tests...
+  ...............................................................          [100%]
+  63 passed in 26.10s
+  running sanity checks...
+  PASS calibration
+  PASS pfa_trend
+  PASS snr_trend
+  PASS belief_sum
+  PASS negative_observation_posterior
+  PASS sequential
+  PASS random_uniform
+  PASS belief_greedy
+  PASS level2_consistency
+
+============================================================
+[STAGE 3/9] RL训练：DQN/PPO/MuZero（含消融变体D/E/F/G）
+============================================================

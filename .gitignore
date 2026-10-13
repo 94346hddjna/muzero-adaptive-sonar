@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# 大体积实验产物（可由代码重新生成；完整原始数据在本地zip备份中）
+**/checkpoints/
+results/raw/
+results_v2/raw/
+results_v3/raw/
+results_v2_smoke/
+results/logs/
+results_v2/logs/
+results_v3/logs/
+results/raw/training_logs/
+results_v2/checkpoints/
+results_v3/checkpoints/
+
+# 临时与归档
+*.zip
+zip_structure.txt
+kaiti_extracted.md
+results_v2/watchdog*.log
+results_v3/watchdog*.log
+results_v3/wd_*.log

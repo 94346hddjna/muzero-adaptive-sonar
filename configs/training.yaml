@@ -1,0 +1,30 @@
+# 训练协议配置（依据开题报告公平性章节、表7、第十一章）
+training:
+  # 种子体系（绝不重叠，详见test_seed_isolation.py）
+  train_seeds: [101, 102, 103, 104, 105]   # 5个独立训练种子（表7: 5-10个）
+  validation_scenario_seed: 20250901       # 验证场景固定种子
+  test_scenario_seed: 30303                # 测试场景固定种子（锁定）
+  ood_scenario_seed: 40404                 # OOD场景固定种子
+
+  # 训练交互预算（开题报告公平性："拟统一为1×10^6步"）
+  total_env_steps: 1000000
+  num_parallel_envs: 64
+  checkpoint_interval_steps: 50000
+  validation_interval_steps: 25000
+  validation_episodes: 200
+
+  # 模型选择（第35条：仅凭Validation指标选checkpoint）
+  selection_metric: success_rate          # 在验证集上计算
+
+  # 共通
+  gamma: 0.99            # 表7 式(20)
+  max_grad_norm: 5.0     # 梯度裁剪（算法1）
+  device: auto           # auto/cpu/cuda
+
+smoke:
+  training:
+    total_env_steps: 3000
+    num_parallel_envs: 16
+    checkpoint_interval_steps: 1000
+    validation_interval_steps: 1500
+    validation_episodes: 20

@@ -1,0 +1,20 @@
+**Table 3: Statistical significance (paired, Holm-corrected)**
+
+| Comparison | Condition | SR(a) | SR(b) | Test | p | p (Holm) | Sig. (α=0.05) | Effect size |
+|---|---|---|---|---|---|---|---|---|
+| muzero vs sequential | adversarial | 0.543 | 0.878 | paired_t_test | 0.0000 | 0.0000 | Yes | cohens_dz=-0.905 |
+| muzero vs random | adversarial | 0.543 | 0.654 | paired_t_test | 0.0000 | 0.0000 | Yes | cohens_dz=-0.358 |
+| muzero vs dqn | adversarial | 0.543 | 0.687 | paired_t_test | 0.0000 | 0.0000 | Yes | cohens_dz=-0.479 |
+| muzero vs ppo | adversarial | 0.543 | 0.408 | paired_t_test | 0.0000 | 0.0000 | Yes | cohens_dz=0.415 |
+| muzero vs sequential | biased | 0.549 | 0.878 | paired_t_test | 0.0000 | 0.0000 | Yes | cohens_dz=-0.880 |
+| muzero vs random | biased | 0.549 | 0.654 | paired_t_test | 0.0000 | 0.0000 | Yes | cohens_dz=-0.325 |
+| muzero vs dqn | biased | 0.549 | 0.741 | paired_t_test | 0.0000 | 0.0000 | Yes | cohens_dz=-0.604 |
+| muzero vs ppo | biased | 0.549 | 0.430 | paired_t_test | 0.0000 | 0.0000 | Yes | cohens_dz=0.347 |
+| muzero vs sequential | correct | 0.607 | 0.878 | paired_t_test | 0.0000 | 0.0000 | Yes | cohens_dz=-0.693 |
+| muzero vs random | correct | 0.607 | 0.654 | paired_t_test | 0.0000 | 0.0000 | Yes | cohens_dz=-0.140 |
+| muzero vs dqn | correct | 0.607 | 0.922 | paired_t_test | 0.0000 | 0.0000 | Yes | cohens_dz=-1.083 |
+| muzero vs ppo | correct | 0.607 | 0.490 | paired_t_test | 0.0000 | 0.0000 | Yes | cohens_dz=0.333 |
+| muzero vs sequential | uniform | 0.538 | 0.878 | paired_t_test | 0.0000 | 0.0000 | Yes | cohens_dz=-0.847 |
+| muzero vs random | uniform | 0.538 | 0.654 | paired_t_test | 0.0000 | 0.0000 | Yes | cohens_dz=-0.336 |
+| muzero vs dqn | uniform | 0.538 | 0.812 | paired_t_test | 0.0000 | 0.0000 | Yes | cohens_dz=-0.879 |
+| muzero vs ppo | uniform | 0.538 | 0.434 | paired_t_test | 0.0000 | 0.0000 | Yes | cohens_dz=0.310 |

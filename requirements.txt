@@ -1,0 +1,11 @@
+# 核心依赖（Python 3.10+）
+numpy>=1.24
+scipy>=1.10
+pandas>=2.0
+matplotlib>=3.7
+openpyxl>=3.1
+PyYAML>=6.0
+python-docx>=1.1
+defusedxml>=0.7
+pytest>=7.0
+torch>=2.0  # CUDA版本按硬件安装（本项目验证于torch 2.11.0+cu128, RTX 5060）
