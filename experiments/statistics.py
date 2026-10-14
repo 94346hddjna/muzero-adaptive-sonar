@@ -197,8 +197,9 @@ def run_statistics(results_root: Path, stage: str = "main", smoke: bool = False)
                     "ci95_low": row["diff_ci95_low"], "ci95_high": row["diff_ci95_high"],
                     "n_pairs": row["n_pairs"],
                 })
-    write_csv(stats_dir / "statistical_tests.csv", test_rows)
-    write_csv(stats_dir / "effect_sizes.csv", effect_rows)
+    # 每阶段独立落盘（修复：原实现各阶段覆盖同一文件，仅保留最后阶段）
+    write_csv(stats_dir / f"statistical_tests_{stage}.csv", test_rows)
+    write_csv(stats_dir / f"effect_sizes_{stage}.csv", effect_rows)
     # 跨种子聚合
     _seed_level_summary(results_root, stage)
     # OOD Drop（式35）
@@ -273,3 +274,17 @@ def _ood_drop(results_root: Path):
             })
     if rows:
         write_csv(results_root / "processed" / "ood_drop.csv", rows)
+
+
+def merge_statistics(results_root: Path):
+    """合并各阶段统计检验/效应量为单一总表（statistical_tests.csv等）。"""
+    import csv as _csv
+    stats_dir = results_root / "statistics"
+    for name in ["statistical_tests", "effect_sizes"]:
+        rows = []
+        for f in sorted(stats_dir.glob(f"{name}_*.csv")):
+            with open(f, encoding="utf-8") as fh:
+                rows.extend(list(_csv.DictReader(fh)))
+        if rows:
+            write_csv(stats_dir / f"{name}.csv", rows)
+            print(f"  merged {name}: {len(rows)} rows from {len(list(stats_dir.glob(name + '_*.csv')))} stage files")

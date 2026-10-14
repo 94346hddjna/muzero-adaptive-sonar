@@ -1,0 +1,74 @@
+{
+  "easy": {
+    "spearman_rho": 0.9486832980505139,
+    "p_value": 0.05131670194948613,
+    "level1_SR": {
+      "sequential": 0.999,
+      "random": 0.914,
+      "belief_greedy": 0.999,
+      "dqn": 0.4782,
+      "ppo": 0.47059999999999996,
+      "muzero": 0.725
+    },
+    "level2_SR": {
+      "sequential": 0.9933333333333333,
+      "belief_greedy": 0.9966666666666667,
+      "ppo": 0.46533333333333343,
+      "muzero": 0.7193333333333334
+    },
+    "algorithms": [
+      "belief_greedy",
+      "muzero",
+      "ppo",
+      "sequential"
+    ]
+  },
+  "medium": {
+    "spearman_rho": 1.0,
+    "p_value": 0.0,
+    "level1_SR": {
+      "sequential": 0.899,
+      "random": 0.6632,
+      "belief_greedy": 0.96,
+      "dqn": 0.33499999999999996,
+      "ppo": 0.30300000000000005,
+      "muzero": 0.6788000000000001
+    },
+    "level2_SR": {
+      "sequential": 0.8766666666666667,
+      "belief_greedy": 0.96,
+      "ppo": 0.31866666666666665,
+      "muzero": 0.6933333333333334
+    },
+    "algorithms": [
+      "belief_greedy",
+      "muzero",
+      "ppo",
+      "sequential"
+    ]
+  },
+  "hard": {
+    "spearman_rho": 1.0,
+    "p_value": 0.0,
+    "level1_SR": {
+      "sequential": 0.432,
+      "random": 0.36360000000000003,
+      "belief_greedy": 0.0,
+      "dqn": 0.1316,
+      "ppo": 0.10779999999999998,
+      "muzero": 0.2778
+    },
+    "level2_SR": {
+      "sequential": 0.44333333333333336,
+      "belief_greedy": 0.0,
+      "ppo": 0.098,
+      "muzero": 0.2693333333333333
+    },
+    "algorithms": [
+      "belief_greedy",
+      "muzero",
+      "ppo",
+      "sequential"
+    ]
+  }
+}

@@ -146,11 +146,17 @@ def _ablations_done(results_root: Path, smoke: bool) -> bool:
     # 检查七组A-G的关键产物
     files = list(d.rglob("*.jsonl"))
     names = [f.name for f in files]
+    # v3等盲搜索轮次禁用消融D（信念本就不在输入中）——按config豁免
+    try:
+        from utils.config import load_config as _lc
+        disabled = _lc("ablation").get("ablation", {}).get("disabled_variants", [])
+    except Exception:
+        disabled = []
     has = {
         "A_wo_mcts": any("woMCTS" in n for n in names),
         "B_sims": any("M25" in n or "M8" in n for n in names),
         "C_depth": any("D1" in n or "D3" in n for n in names),
-        "D_wo_belief": any("woBelief" in n for n in names),
+        "D_wo_belief": (any("woBelief" in n for n in names) or "wo_belief" in disabled),
         "E_wo_memory": any("woMemory" in n for n in names),
         "F_wo_domrand": any("woDomRand" in n for n in names),
         "G_shaped": any("shapedReward" in n for n in names),

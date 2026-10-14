@@ -1,0 +1,7 @@
+Method,"Training wall-clock (s, mean)","Decision latency (ms, mean)","Decision latency (ms, std)",Env. steps budget
+Sequential,—,0.00,0.00,—
+Random,—,0.00,0.00,—
+Belief-Greedy,—,0.00,0.00,—
+DQN,572,0.03,0.00,1000000
+PPO,399,0.04,0.00,1000000
+MuZero (ours),11131,6.75,0.01,1000000

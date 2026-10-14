@@ -9,7 +9,7 @@ FULL模式：正式论文实验规模（1e6步×5种子×3算法+消融+OOD+统�
   worker adaptation: {'num_parallel_envs_suggested': 64, 'eval_workers_suggested': 4, 'note': '仅并行度自适应；算法定义、环境定义、评价指标与公平比较协议不变'}
   running unit tests...
   ...............................................................          [100%]
-  63 passed in 26.10s
+  63 passed in 23.21s
   running sanity checks...
   PASS calibration
   PASS pfa_trend
@@ -24,3 +24,46 @@ FULL模式：正式论文实验规模（1e6步×5种子×3算法+消融+OOD+统�
 ============================================================
 [STAGE 3/9] RL训练：DQN/PPO/MuZero（含消融变体D/E/F/G）
 ============================================================
+  training runs (incl. skipped-resume): 30
+
+============================================================
+[STAGE 4/9] 主实验测试：6算法×Easy/Medium/Hard×固定场景
+============================================================
+  main result rows: 66
+
+============================================================
+[STAGE 5/9] 消融实验A-G（表6）
+============================================================
+  ablation rows: 100
+
+============================================================
+[STAGE 6/9] 鲁棒性sweep + OOD五类
+============================================================
+  robustness rows: 440, ood rows: 132
+
+============================================================
+[STAGE 7/9] 先验偏差实验（4类先验+KL纠偏）
+============================================================
+  prior_bias rows: 88
+
+============================================================
+[STAGE 8/9] Level 2信号级验证
+============================================================
+  level2 rows: 36
+
+============================================================
+[STAGE 9/9] 统计分析→图表→表格→质量检查→最终报告
+============================================================
+  statistics[main]: {'n_tests': 12, 'n_effects': 12}
+  statistics[ablation]: {'n_tests': 20, 'n_effects': 20}
+  statistics[ood]: {'n_tests': 24, 'n_effects': 24}
+  statistics[robustness]: {'n_tests': 80, 'n_effects': 80}
+  statistics[prior_bias]: {'n_tests': 16, 'n_effects': 16}
+  quality check: PASSED
+  figures generated: 40
+  case studies: {'n_cases': 4, 'cases': ['case1_correct_prior_low_noise', 'case2_wrong_prior_recovery', 'case3_consecutive_misses', 'case4_false_alarm']}
+  tables generated: ['table1', 'table2', 'table3', 'table4', 'table5', 'table6', 'table7']
+  reports: results/reports/final_experiment_report.md, results/FINAL_SUMMARY.md
+
+总耗时 64580.5s 完成：all
+主要交付：results/FINAL_SUMMARY.md, results/experiment_summary.xlsx, results/figures/, results/tables/, results/reports/final_experiment_report.md

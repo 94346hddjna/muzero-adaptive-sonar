@@ -175,6 +175,7 @@ def stage_analysis(results: Path, smoke: bool):
     for stage in ["main", "ablation", "ood", "robustness", "prior_bias"]:
         r = stat_mod.run_statistics(results, stage=stage, smoke=smoke)
         print(f"  statistics[{stage}]: {r}")
+    stat_mod.merge_statistics(results)
     _build_runtime_csv(results)
     qc = run_quality_check(results, smoke=smoke)
     print(f"  quality check: {'PASSED' if qc['passed'] else 'FAILED — 见issues'}")
