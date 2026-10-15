@@ -28,17 +28,17 @@ function P(text, opts = {}) {
   });
 }
 function H1(text) {
-  return new Paragraph({ heading: HeadingLevel.HEADING_1, alignment: AlignmentType.CENTER,
+  return new Paragraph({ heading: HeadingLevel.HEADING_1, alignment: AlignmentType.CENTER, keepNext: true,
     spacing: { before: 240, after: 120, line: 280 },
     children: [new TextRun({ text, bold: true, size: 32, color: C.primary, font: FONT })] });
 }
 function H2(text) {
-  return new Paragraph({ heading: HeadingLevel.HEADING_2,
+  return new Paragraph({ heading: HeadingLevel.HEADING_2, keepNext: true,
     spacing: { before: 200, after: 100, line: 280 },
     children: [new TextRun({ text, bold: true, size: 30, color: C.primary, font: FONT })] });
 }
 function H3(text) {
-  return new Paragraph({ heading: HeadingLevel.HEADING_3,
+  return new Paragraph({ heading: HeadingLevel.HEADING_3, keepNext: true,
     spacing: { before: 160, after: 80, line: 280 },
     children: [new TextRun({ text, bold: true, size: 28, color: C.primary, font: FONT })] });
 }
@@ -155,14 +155,19 @@ function threeLineTable(header, rows, capText, colWidthsPct = null) {
       children: [new Paragraph({ alignment: AlignmentType.CENTER,
         children: [new TextRun({ text: t, bold: true, size: 20, font: FONT })] })],
     })) });
-  const body = rows.map((r) => new TableRow({ cantSplit: true,
-    children: r.map((c, ci) => new TableCell({
-      width: { size: widths[ci], type: WidthType.PERCENTAGE },
-      borders: { top: NB, bottom: NB, left: NB, right: NB },
-      margins: { top: 30, bottom: 30, left: 80, right: 80 },
-      children: [new Paragraph({ alignment: AlignmentType.CENTER,
-        children: [new TextRun({ text: String(c), size: 20, font: FONT })] })],
-    })) }));
+  const body = rows.map((r) => {
+    const isOurs = String(r[0]).toLowerCase().includes("muzero") || String(r[0]).toLowerCase().includes("ours");
+    return new TableRow({ cantSplit: true,
+      children: r.map((c, ci) => new TableCell({
+        width: { size: widths[ci], type: WidthType.PERCENTAGE },
+        borders: { top: NB, bottom: NB, left: NB, right: NB },
+        margins: { top: 30, bottom: 30, left: 80, right: 80 },
+        shading: isOurs ? { type: "clear", color: "auto", fill: "EAF3FB" } : undefined,
+        children: [new Paragraph({ alignment: AlignmentType.CENTER,
+          children: [new TextRun({ text: String(c), size: 20, font: FONT,
+            bold: isOurs })] })],
+      })) });
+  });
   return [
     new Paragraph({ keepNext: true, alignment: AlignmentType.CENTER,
       spacing: { before: 80, after: 20 },
@@ -250,13 +255,13 @@ bodyChildren.push(body(
 bodyChildren.push(body(
   "Conventional active sonar operates in an open-loop mode: the transmitter emits a signal with fixed frequency, pulse width, power, and beam pointing, while the receiver performs beamforming, matched filtering, and CFAR detection on the returns [1][8]. When the target position is highly uncertain and the environment varies, this fixed policy wastes emission resources on low-value bearings, leading to low detection efficiency, high energy cost, and high exposure risk."
 ));
-bodyChildren.push(...figure("schematic_cognitive_loop.png",
-  "Figure 1-1 The cognitive sonar adaptive closed-loop detection chain"));
+bodyChildren.push(...figure("fig_cognitive_loop_rich.png",
+  "Figure 1-1 The cognitive sonar adaptive closed-loop detection chain: transmit → observe → cognize → adapt"));
 bodyChildren.push(body(
   "To overcome these limitations, cognitive sonar was proposed, borrowing from cognitive radar, with the idea of a closed-loop adaptive detection chain: sense, observe, adapt, and re-transmit [6][7]. The sonar actively adjusts its next emission parameters (frequency, pulse width, gain, beam pointing) based on the current echo, matching the transmit signal to the current environment and task objective. However, most existing adaptive strategies rely on heuristic rules or single-step greedy policies — for example, probing harder near a strong echo and moving to adjacent bearings otherwise. Such rules lack multi-step planning and cannot make globally optimal arrangements for which bearings to probe first, which to check next, and when to converge."
 ));
-bodyChildren.push(...figure("fig3d_sonar_scene.png",
-  "Figure 1-2 The active sonar target search scenario: a sonar vessel emits beams over a sector grid, with the target sector illuminated"));
+bodyChildren.push(...figure("fig_sonar_scene_rich.png",
+  "Figure 1-2 The active sonar search scenario: (a) sector grid + belief heatmap, (b) Swerling-I detection model, (c) beam directivity, (d) belief evolution over pings"));
 bodyChildren.push(body(
   "More recently, model-free deep reinforcement learning (DQN, PPO, SAC) has been applied to sensor management and underwater target search [30][31][32], demonstrating that learned policies can outperform fixed rules. Yet model-free methods suffer from low sample efficiency — they require large interaction budgets — and learn only an implicit mapping from current observation to action, lacking explicit reasoning about multi-step future returns. In partially observable settings with sparse rewards, they often fall into short-sighted local optima."
 ));
@@ -821,8 +826,8 @@ bodyChildren.push(...figure("fig3d_sector_grid.png",
 bodyChildren.push(body(
   "Belief-Greedy fails completely under biased priors on Hard (SR = 0.000): the greedy policy locks onto the wrong sector and cannot escape within the 20-step budget. Sequential scan is unaffected (SR = 0.432) because it ignores the prior. MuZero recovers partially (SR = 0.278 on Hard with biased prior), showing that its learned policy can correct a wrong prior through observation history — the KL divergence between belief and true target distribution decreases monotonically over pings (Figure 3-10)."
 ));
-bodyChildren.push(...figure("16_prior_bias_en.png",
-  "Figure 3-11 Prior-bias robustness: SR under uniform/correct/biased/adversarial priors"));
+bodyChildren.push(...figure("fig_prior_bias_rich.png",
+  "Figure 3-11 Prior-bias robustness: four initial belief types (uniform/correct/biased/adversarial) over 16 sectors with true target marked"));
 bodyChildren.push(...figure("17b_kl_correction_en.png",
   "Figure 3-12 Belief correction over pings: KL divergence from true target under different initial priors"));
 
