@@ -59,6 +59,7 @@ function fmt(v, p = 3) {
 }
 
 // 真实图片尺寸（避免宽高比失真）
+const SCHEMATIC_DIR = path.join(ROOT, "results_v3", "figures", "schematic");
 const PNG_DIMS = {
   "01_training_curves_en.png": [2775, 1172],
   "01_training_curves_zh.png": [2776, 1173],
@@ -110,10 +111,24 @@ const PNG_DIMS = {
   "case3_consecutive_misses_zh.png": [2127, 1764],
   "case4_false_alarm_en.png": [2126, 1761],
   "case4_false_alarm_zh.png": [2127, 1764],
+  "fig3d_belief_evolution.png": [1024, 768],
+  "fig3d_performance_landscape.png": [1024, 768],
+  "fig3d_sector_grid.png": [1024, 768],
+  "fig3d_sonar_scene.png": [1024, 768],
+  "schematic_cognitive_loop.png": [1024, 1024],
+  "schematic_experiment_pipeline.png": [1024, 768],
+  "schematic_muzero_arch.png": [1024, 768],
+  "schematic_pomdp_loop.png": [1024, 768],
+  "schematic_system_architecture.png": [1024, 768],
+  "schematic_two_level_env.png": [1024, 768],
 };
 
 function figure(imgName, capText, widthInches = 5.5) {
-  const imgPath = path.join(ROOT, "results_v3", "figures", imgName);
+  let imgPath = path.join(ROOT, "results_v3", "figures", imgName);
+  if (!fs.existsSync(imgPath)) {
+    const alt = path.join(SCHEMATIC_DIR, imgName);
+    if (fs.existsSync(alt)) imgPath = alt;
+  }
   if (!fs.existsSync(imgPath)) return [];
   const img = fs.readFileSync(imgPath);
   const w = Math.round(widthInches * 96);
@@ -231,9 +246,13 @@ bodyChildren.push(body(
 bodyChildren.push(body(
   "Conventional active sonar operates in an open-loop mode: the transmitter emits a signal with fixed frequency, pulse width, power, and beam pointing, while the receiver performs beamforming, matched filtering, and CFAR detection on the returns [1][8]. When the target position is highly uncertain and the environment varies, this fixed policy wastes emission resources on low-value bearings, leading to low detection efficiency, high energy cost, and high exposure risk."
 ));
+bodyChildren.push(...figure("schematic_cognitive_loop.png",
+  "Figure 1-1 The cognitive sonar adaptive closed-loop detection chain"));
 bodyChildren.push(body(
   "To overcome these limitations, cognitive sonar was proposed, borrowing from cognitive radar, with the idea of a closed-loop adaptive detection chain: sense, observe, adapt, and re-transmit [6][7]. The sonar actively adjusts its next emission parameters (frequency, pulse width, gain, beam pointing) based on the current echo, matching the transmit signal to the current environment and task objective. However, most existing adaptive strategies rely on heuristic rules or single-step greedy policies — for example, probing harder near a strong echo and moving to adjacent bearings otherwise. Such rules lack multi-step planning and cannot make globally optimal arrangements for which bearings to probe first, which to check next, and when to converge."
 ));
+bodyChildren.push(...figure("fig3d_sonar_scene.png",
+  "Figure 1-2 The active sonar target search scenario: a sonar vessel emits beams over a sector grid, with the target sector illuminated"));
 bodyChildren.push(body(
   "More recently, model-free deep reinforcement learning (DQN, PPO, SAC) has been applied to sensor management and underwater target search [30][31][32], demonstrating that learned policies can outperform fixed rules. Yet model-free methods suffer from low sample efficiency — they require large interaction budgets — and learn only an implicit mapping from current observation to action, lacking explicit reasoning about multi-step future returns. In partially observable settings with sparse rewards, they often fall into short-sighted local optima."
 ));
@@ -259,6 +278,8 @@ bodyChildren.push(body(
 // ================= 2. Methods =================
 bodyChildren.push(H1("2. Methods"));
 
+bodyChildren.push(...figure("schematic_system_architecture.png",
+  "Figure 2-1 Overall system architecture: six layers with dual channels (real environment and MuZero latent planning)"));
 bodyChildren.push(H2("2.1 Task formalization: POMDP for active detection"));
 bodyChildren.push(body(
   "We consider active sonar detection in a two-dimensional bearing space partitioned into N angular sectors. A single stationary target occupies an unknown sector x ∈ {1,…,N}. At each decision step t, the agent selects a probing action a_t ∈ A = {1,…,N} (beam pointing), receives a Bernoulli detection observation o_t, and updates its belief. The episode ends when the target is correctly detected (o_t = 1 and x = a_t) or the budget T_max = 20 pings is exhausted."
@@ -298,6 +319,8 @@ bodyChildren.push(body(
   "The denominator is the normalization factor. Importantly, a missed detection does not simply zero out a sector's probability — the posterior decays by the miss probability (1 − P_D), while the remaining sectors' probabilities rise accordingly. This negative-observation information is precisely what multi-step active detection can exploit."
 ));
 
+bodyChildren.push(...figure("schematic_pomdp_loop.png",
+  "Figure 2-2 The POMDP interaction loop: hidden target sector, active sonar emission, observation, Bayesian belief update, and policy action"));
 // 式(6)-(8) LFM
 bodyChildren.push(H2("2.2 Acoustic environment model"));
 bodyChildren.push(body(
@@ -464,6 +487,8 @@ bodyChildren.push(eq([
     new MathRun("(p_t^k, v_t^k) = f_θ(h_t^k)"),
   ] }),
 ], 19));
+bodyChildren.push(...figure("schematic_muzero_arch.png",
+  "Figure 2-4 MuZero architecture: representation network encodes history into a latent state; dynamics and prediction networks drive MCTS planning in latent space"));
 bodyChildren.push(body(
   "where p_t^k is a softmax-normalized policy prior over actions and v_t^k is the value estimate of the latent state. We emphasize that MuZero does not predict raw sonar waveforms; its latent state carries no physical interpretation — it learns latent dynamics that are useful for predicting rewards and for planning, which is precisely why it can plan under conditions where the acoustic channel is hard to model exactly."
 ));
@@ -616,6 +641,8 @@ bodyChildren.push(...threeLineTable(
 
 // 公平比较
 bodyChildren.push(H2("2.8 Fair comparison protocol"));
+bodyChildren.push(...figure("schematic_experiment_pipeline.png",
+  "Figure 2-5 Experimental pipeline: scenario generation, training, validation-based model selection, paired testing, ablation and OOD evaluation, statistics and figures"));
 bodyChildren.push(body(
   "All methods use identical training environment distribution, identical maximum episode length, identical reward function, identical observable information, identical test scenario set, and identical random seed set. For learned methods, the total environment-interaction budget is unified (1×10⁶ steps for V1, 2×10⁶ steps for V2/V3). MuZero's internal MCTS latent rollouts do not count as environment interactions, but we separately report its compute cost (training wall-clock, per-step decision latency, simulation count) so that performance and cost are presented together."
 ));
@@ -788,6 +815,8 @@ bodyChildren.push(...figure("15_id_vs_ood_en.png",
 
 // ---------- 3.5 先验偏差 ----------
 bodyChildren.push(H2("3.5 Prior-bias robustness"));
+bodyChildren.push(...figure("fig3d_sector_grid.png",
+  "Figure 3-10 The sonar sector grid: a circular search area divided into angular sectors, with the target sector highlighted (3D rendering)"));
 bodyChildren.push(body(
   "Belief-Greedy fails completely under biased priors on Hard (SR = 0.000): the greedy policy locks onto the wrong sector and cannot escape within the 20-step budget. Sequential scan is unaffected (SR = 0.432) because it ignores the prior. MuZero recovers partially (SR = 0.278 on Hard with biased prior), showing that its learned policy can correct a wrong prior through observation history — the KL divergence between belief and true target distribution decreases monotonically over pings (Figure 3-10)."
 ));
@@ -796,6 +825,8 @@ bodyChildren.push(...figure("16_prior_bias_en.png",
 bodyChildren.push(...figure("17b_kl_correction_en.png",
   "Figure 3-11 Belief correction over pings: KL divergence from true target under different initial priors"));
 
+bodyChildren.push(...figure("schematic_two_level_env.png",
+  "Figure 2-3 The two-level sonar simulation environment: Level 1 detection-probability abstraction vs Level 2 signal-level simulation"));
 // ---------- 3.6 Level2一致性 ----------
 bodyChildren.push(H2("3.6 Level-1 vs Level-2 consistency"));
 const l2 = data.l2_consistency;
@@ -812,8 +843,10 @@ bodyChildren.push(body(
 ));
 bodyChildren.push(...figure("20_raw_vs_improved_en.png",
   "Figure 3-13 Raw network policy p(a|s) vs MCTS-improved policy π(a|s) on a representative state"));
+bodyChildren.push(...figure("fig3d_belief_evolution.png",
+  "Figure 3-14 Belief evolution over pings: the belief distribution sharpens from uniform to a single peak as evidence accumulates (3D rendering)"));
 bodyChildren.push(...figure("17_belief_heatmap_en.png",
-  "Figure 3-14 Belief evolution heatmap over pings (representative episode)"));
+  "Figure 3-15 Belief evolution heatmap over pings (representative episode)"));
 bodyChildren.push(...figure("18_search_trajectory_en.png",
   "Figure 3-15 Search trajectory: beam-pointing sector sequence with detections marked"));
 
