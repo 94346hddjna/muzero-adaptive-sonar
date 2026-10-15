@@ -693,7 +693,7 @@ function srCellV(d, algo) {
 }
 function adsCellV(d, algo) {
   const r = d[algo];
-  if (!r || r.ads === null) return "—";
+  if (!r || r.ads === null) return "n/a";  // 无成功回合时无ADS
   return fmt(r.ads, 1);
 }
 
@@ -753,6 +753,9 @@ bodyChildren.push(H2("3.3 Ablation studies"));
 
 // 表3-3 消融A
 const abl3d = data.abl3;
+// 修复评审发现的bug：主基准SR必须用主实验干净值(0.679)，
+// 不能用消融表中混入M/深度扫描行的平均(那会错算成0.571)
+abl3d.main = v3m.medium.muzero.sr;
 const wo_mcts = abl3d.wo_mcts;
 if (wo_mcts) {
   bodyChildren.push(...threeLineTable(
@@ -768,7 +771,7 @@ if (wo_mcts) {
   ));
 }
 bodyChildren.push(body(
-  "Removing MCTS (using only the policy head without search) degrades MuZero from SR = 0.679 to 0.499 (−0.180), confirming that tree search is the primary contributor to MuZero's advantage (ablation A). Removing GRU memory reduces SR to 0.608 (−0.071), and removing domain randomization reduces it to 0.642 (−0.037). Shaped (potential-based) rewards produce no significant change (+0.024), suggesting the sparse task reward is already well-shaped by the detection objective."
+  "Removing MCTS (using only the policy head without search) degrades MuZero from SR = " + fmt(abl3d.main) + " to " + fmt(wo_mcts.sr) + " (−" + fmt(abl3d.main - wo_mcts.sr) + "), confirming that tree search is the primary contributor to MuZero's advantage (ablation A). Removing GRU memory reduces SR to " + fmt(abl3d.wo_memory.sr) + " (−" + fmt(abl3d.wo_memory.delta) + "), and removing domain randomization reduces it to " + fmt(abl3d.wo_domain_rand.sr) + " (−" + fmt(abl3d.wo_domain_rand.delta) + "). Shaped (potential-based) rewards produce no significant change (+" + fmt(-abl3d.shaped.delta) + "), suggesting the sparse task reward is already well-shaped by the detection objective."
 ));
 
 // 表3-4 MCTS模拟次数
@@ -834,7 +837,7 @@ bodyChildren.push(H2("3.5 Prior-bias robustness"));
 bodyChildren.push(...figure("fig3d_sector_grid.png",
   "Figure 3-10 The sonar sector grid: a circular search area divided into angular sectors, with the target sector highlighted (3D rendering)"));
 bodyChildren.push(body(
-  "Belief-Greedy fails completely under biased priors on Hard (SR = 0.000): the greedy policy locks onto the wrong sector and cannot escape within the 20-step budget. Sequential scan is unaffected (SR = 0.432) because it ignores the prior. MuZero recovers partially (SR = 0.278 on Hard with biased prior), showing that its learned policy can correct a wrong prior through observation history — the KL divergence between belief and true target distribution decreases monotonically over pings (Figure 3-10)."
+  "Belief-Greedy fails completely under biased priors on Hard (SR = 0.000): the greedy policy locks onto the wrong sector and cannot escape within the 20-step budget. Sequential scan is unaffected (SR = 0.432) because it ignores the prior. MuZero recovers partially (SR = 0.278 on Hard with biased prior), showing that its learned policy can partially correct a wrong prior through observation history — the KL divergence between belief and true target distribution drops sharply within the first few pings and then plateaus (Figure 3-10), indicating rapid initial correction with slower refinement."
 ));
 bodyChildren.push(...figure("fig_prior_bias_combined.png",
   "Figure 3-11 Prior-bias robustness: (a)-(d) four initial belief types over 16 sectors, (e) KL divergence correction over pings, (f) success rate under different priors"));
@@ -920,7 +923,7 @@ bodyChildren.push(body(
 
 bodyChildren.push(H2("4.4 Limitations"));
 bodyChildren.push(body(
-  "Several limitations must be noted. First, the environment is a stylized two-level abstraction with parameterized acoustic models — it does not simulate real ocean bathymetry or full waveform physics. Second, the action space is discrete sector selection; continuous beam steering and waveform parameter optimization are left as future work. Third, all methods degrade sharply at N = 48 (OOD-N), indicating limited generalization to larger problem scales. Fourth, MuZero's compute cost (6.7 ms per decision, ~220× DQN) may be prohibitive for real-time sonar without engineering optimization. Fifth, the initial priors are synthetic; field priors from sonar operators may differ in shape."
+  "Several limitations must be noted. First, the learned baselines do not include memory-augmented variants (e.g., DQN with GRU over history, PPO with frame stacking) or dedicated POMDP planners (e.g., POMCP, DESPOT) — MuZero's advantage over these alternatives remains to be tested, and we note this as important future work. Second, the environment is a stylized two-level abstraction with parameterized acoustic models — it does not simulate real ocean bathymetry or full waveform physics. Second, the action space is discrete sector selection; continuous beam steering and waveform parameter optimization are left as future work. Third, all methods degrade sharply at N = 48 (OOD-N), indicating limited generalization to larger problem scales. Fourth, MuZero's compute cost (6.7 ms per decision, ~220× DQN) may be prohibitive for real-time sonar without engineering optimization. Fifth, the initial priors are synthetic; field priors from sonar operators may differ in shape."
 ));
 
 bodyChildren.push(H2("4.5 Implications for adaptive sonar design"));
@@ -963,9 +966,9 @@ sections.push({
     new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 200, after: 200 },
       children: [new TextRun({ text: "Rui Tan1, Fei Hu1*", size: 24, font: FONT })] }),
     new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 400 },
-      children: [new TextRun({ text: "1 School of Computer Science and Engineering (School of Artificial Intelligence), XXX University", size: 20, font: FONT })] }),
+      children: [new TextRun({ text: "1 School of Computer Science and Engineering (School of Artificial Intelligence), 【University Name】", size: 20, font: FONT })] }),
     new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 100, after: 400 },
-      children: [new TextRun({ text: "*Corresponding author: [advisor email]", size: 20, font: FONT })] }),
+      children: [new TextRun({ text: "*Corresponding author: 【advisor email】", size: 20, font: FONT })] }),
     P(new TextRun({ text: "Abstract", bold: true, size: 28, font: FONT }), { align: AlignmentType.CENTER, spacing: { before: 200, after: 200 } }),
     body(abstractText),
     P(new TextRun({ text: "Keywords: " + keywords, bold: true, size: 24, font: FONT }), { indent: { firstLine: 480 }, spacing: { before: 200 } }),
