@@ -23,23 +23,23 @@ function P(text, opts = {}) {
   return new Paragraph({
     alignment: opts.align || AlignmentType.JUSTIFIED,
     indent: opts.indent,
-    spacing: { line: 360, ...(opts.spacing || {}) },
+    spacing: { line: 240, ...(opts.spacing || {}) },
     children: Array.isArray(text) ? text : [new TextRun({ text, size: 24, color: C.body, font: FONT, ...opts.run })],
   });
 }
 function H1(text) {
   return new Paragraph({ heading: HeadingLevel.HEADING_1, alignment: AlignmentType.CENTER,
-    spacing: { before: 480, after: 240, line: 360 },
+    spacing: { before: 240, after: 120, line: 280 },
     children: [new TextRun({ text, bold: true, size: 32, color: C.primary, font: FONT })] });
 }
 function H2(text) {
   return new Paragraph({ heading: HeadingLevel.HEADING_2,
-    spacing: { before: 360, after: 200, line: 360 },
+    spacing: { before: 200, after: 100, line: 280 },
     children: [new TextRun({ text, bold: true, size: 30, color: C.primary, font: FONT })] });
 }
 function H3(text) {
   return new Paragraph({ heading: HeadingLevel.HEADING_3,
-    spacing: { before: 240, after: 120, line: 360 },
+    spacing: { before: 160, after: 80, line: 280 },
     children: [new TextRun({ text, bold: true, size: 28, color: C.primary, font: FONT })] });
 }
 function body(text) {
@@ -50,7 +50,7 @@ function bodyPlain(text) {
 }
 function caption(text) {
   return new Paragraph({ alignment: AlignmentType.CENTER,
-    spacing: { before: 60, after: 200 },
+    spacing: { before: 20, after: 100 },
     children: [new TextRun({ text, size: 21, color: C.caption, font: FONT })] });
 }
 function fmt(v, p = 3) {
@@ -135,36 +135,40 @@ function figure(imgName, capText, widthInches = 5.5) {
   const dims = PNG_DIMS[imgName] || [1600, 1000];
   const h = Math.round(w * dims[1] / dims[0]);
   return [
-    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 200, after: 60 },
+    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 80, after: 20 },
       children: [new ImageRun({ data: img, transformation: { width: w, height: h }, type: "png" })] }),
     caption(capText),
   ];
 }
 
-function threeLineTable(header, rows, capText) {
+function threeLineTable(header, rows, capText, colWidthsPct = null) {
   const NB = { style: BorderStyle.NONE, color: "FFFFFF" };
+  const nCols = header.length;
+  const widths = colWidthsPct || header.map(() => Math.floor(100 / nCols));
   const hdr = new TableRow({ tableHeader: true, cantSplit: true,
-    children: header.map((t) => new TableCell({
+    children: header.map((t, ci) => new TableCell({
+      width: { size: widths[ci], type: WidthType.PERCENTAGE },
       borders: { top: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
                  bottom: { style: BorderStyle.SINGLE, size: 2, color: "000000" },
                  left: NB, right: NB },
-      margins: { top: 60, bottom: 60, left: 120, right: 120 },
+      margins: { top: 40, bottom: 40, left: 80, right: 80 },
       children: [new Paragraph({ alignment: AlignmentType.CENTER,
-        children: [new TextRun({ text: t, bold: true, size: 21, font: FONT })] })],
+        children: [new TextRun({ text: t, bold: true, size: 20, font: FONT })] })],
     })) });
   const body = rows.map((r) => new TableRow({ cantSplit: true,
-    children: r.map((c) => new TableCell({
+    children: r.map((c, ci) => new TableCell({
+      width: { size: widths[ci], type: WidthType.PERCENTAGE },
       borders: { top: NB, bottom: NB, left: NB, right: NB },
-      margins: { top: 40, bottom: 40, left: 120, right: 120 },
+      margins: { top: 30, bottom: 30, left: 80, right: 80 },
       children: [new Paragraph({ alignment: AlignmentType.CENTER,
-        children: [new TextRun({ text: String(c), size: 21, font: FONT })] })],
+        children: [new TextRun({ text: String(c), size: 20, font: FONT })] })],
     })) }));
   return [
     new Paragraph({ keepNext: true, alignment: AlignmentType.CENTER,
-      spacing: { before: 200, after: 60 },
+      spacing: { before: 80, after: 20 },
       children: [new TextRun({ text: capText, bold: true, size: 21, font: FONT })] }),
     new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: [hdr, ...body] }),
-    new Paragraph({ spacing: { after: 120 }, children: [] }),
+    new Paragraph({ spacing: { after: 60 }, children: [] }),
   ];
 }
 
@@ -176,7 +180,7 @@ function eq(children, num) {
       { type: "center", position: 4500 },
       { type: "right", position: 9000 },
     ],
-    spacing: { before: 60, after: 60, line: 360 },
+    spacing: { before: 30, after: 30, line: 240 },
     children: [
       new TextRun({ text: "\t" }),
       ...children,
@@ -503,7 +507,8 @@ bodyChildren.push(...threeLineTable(
     ["Policy head (f_θ)", "256", "FC(N)", "N", "Softmax", "action prob."],
     ["Value/reward head", "128", "FC(1)", "1", "Linear", "scalar regression"],
   ],
-  "Table 3-2 MuZero three-network architecture (adopted from Table 3 of the proposal)"
+  "Table 3-2 MuZero three-network architecture (adopted from Table 3 of the proposal)",
+  [16, 12, 22, 14, 12, 24]
 ));
 
 // 式(20)-(23) 训练目标
@@ -781,16 +786,10 @@ bodyChildren.push(...threeLineTable(
 // 图3-3 消融
 bodyChildren.push(...figure("07_muzero_vs_womcts_en.png",
   "Figure 3-3 MuZero with vs without MCTS (ablation A) — MCTS contributes +0.18 SR"));
-bodyChildren.push(...figure("08_sims_vs_performance_en.png",
-  "Figure 3-4 MCTS simulation count vs success rate (ablation B)"));
-bodyChildren.push(...figure("10_depth_vs_performance_en.png",
-  "Figure 3-5 MCTS planning depth vs success rate (ablation C)"));
-bodyChildren.push(...figure("12_memory_ablation_en.png",
-  "Figure 3-6 Memory ablation (w/o GRU memory)"));
-bodyChildren.push(...figure("13_domainrand_ablation_en.png",
-  "Figure 3-7 Domain randomization ablation (w/o randomization)"));
-bodyChildren.push(...figure("14_reward_ablation_en.png",
-  "Figure 3-8 Reward design ablation (sparse vs shaped)"));
+bodyChildren.push(...figure("composite_mcts.png",
+  "Figure 3-3 MCTS ablations: (a) simulation count vs SR, (b) simulation count vs latency, (c) planning depth vs SR"));
+bodyChildren.push(...figure("composite_ablations.png",
+  "Figure 3-4 Component ablations: (a) w/o belief, (b) w/o memory, (c) w/o domain randomization, (d) shaped reward"));
 
 // ---------- 3.4 OOD ----------
 bodyChildren.push(H2("3.4 Out-of-distribution robustness"));
@@ -810,8 +809,10 @@ bodyChildren.push(...threeLineTable(
 bodyChildren.push(body(
   "Under OOD-SNR (unseen +8 dB shift), MuZero's SR rises to 0.738 (better-than-ID, as expected from easier detection). Under OOD-PFA (higher false-alarm rate), SR drops slightly to 0.646. Under OOD-Prior (adversarial prior), SR holds at 0.686 — MuZero is robust to prior deception because it does not rely on the belief filter. The critical failure is OOD-N (48 sectors beyond the training maximum of 32): SR drops to 0.181, a −73% degradation shared by all methods, indicating that problem-size generalization remains a common limitation."
 ));
+bodyChildren.push(...figure("composite_sweeps.png",
+  "Figure 3-9 Continuous difficulty sweeps: (a) SR vs SNR, (b) SR vs P_FA, (c) SR vs number of sectors"));
 bodyChildren.push(...figure("15_id_vs_ood_en.png",
-  "Figure 3-9 ID vs OOD performance comparison across all methods (blind search)"));
+  "Figure 3-10 ID vs OOD performance comparison across all methods (blind search)"));
 
 // ---------- 3.5 先验偏差 ----------
 bodyChildren.push(H2("3.5 Prior-bias robustness"));
@@ -821,9 +822,9 @@ bodyChildren.push(body(
   "Belief-Greedy fails completely under biased priors on Hard (SR = 0.000): the greedy policy locks onto the wrong sector and cannot escape within the 20-step budget. Sequential scan is unaffected (SR = 0.432) because it ignores the prior. MuZero recovers partially (SR = 0.278 on Hard with biased prior), showing that its learned policy can correct a wrong prior through observation history — the KL divergence between belief and true target distribution decreases monotonically over pings (Figure 3-10)."
 ));
 bodyChildren.push(...figure("16_prior_bias_en.png",
-  "Figure 3-10 Prior-bias robustness: SR under uniform/correct/biased/adversarial priors"));
+  "Figure 3-11 Prior-bias robustness: SR under uniform/correct/biased/adversarial priors"));
 bodyChildren.push(...figure("17b_kl_correction_en.png",
-  "Figure 3-11 Belief correction over pings: KL divergence from true target under different initial priors"));
+  "Figure 3-12 Belief correction over pings: KL divergence from true target under different initial priors"));
 
 bodyChildren.push(...figure("schematic_two_level_env.png",
   "Figure 2-3 The two-level sonar simulation environment: Level 1 detection-probability abstraction vs Level 2 signal-level simulation"));
@@ -834,21 +835,17 @@ bodyChildren.push(body(
   `The signal-level environment (Level 2) produces the same method rankings as the abstract Level-1 environment: Spearman rank correlation ρ = ${fmt(l2.easy?.spearman_rho)} (Easy), ${fmt(l2.medium?.spearman_rho)} (Medium), ${fmt(l2.hard?.spearman_rho)} (Hard). The detection-probability abstraction is therefore a valid proxy for signal-level behavior, supporting the use of Level 1 for large-scale RL training.`
 ));
 bodyChildren.push(...figure("22_level1_vs_level2_en.png",
-  "Figure 3-12 Level-1 vs Level-2 environment comparison (method rankings consistent)"));
+  "Figure 3-13 Level-1 vs Level-2 environment comparison (method rankings consistent)"));
 
 // ---------- 3.7 机理分析 ----------
 bodyChildren.push(H2("3.7 Mechanism analysis"));
 bodyChildren.push(body(
   "Comparing the raw network policy prior p(a|s) against the MCTS-improved policy π(a|s) shows that tree search sharpens the distribution toward higher-value sectors, confirming that the search is not merely noise (Figure 3-13). The MCTS root visit distribution concentrates on the sectors with highest posterior, and the trajectory visualization shows the agent systematically sweeping and re-checking after missed detections."
 ));
-bodyChildren.push(...figure("20_raw_vs_improved_en.png",
-  "Figure 3-13 Raw network policy p(a|s) vs MCTS-improved policy π(a|s) on a representative state"));
 bodyChildren.push(...figure("fig3d_belief_evolution.png",
   "Figure 3-14 Belief evolution over pings: the belief distribution sharpens from uniform to a single peak as evidence accumulates (3D rendering)"));
-bodyChildren.push(...figure("17_belief_heatmap_en.png",
-  "Figure 3-15 Belief evolution heatmap over pings (representative episode)"));
-bodyChildren.push(...figure("18_search_trajectory_en.png",
-  "Figure 3-15 Search trajectory: beam-pointing sector sequence with detections marked"));
+bodyChildren.push(...figure("composite_mechanism.png",
+  "Figure 3-14 Mechanism analysis: (a) belief evolution heatmap, (b) search trajectory, (c) MCTS root visit distribution, (d) raw network policy vs MCTS-improved policy"));
 
 // ---------- 3.8 计算成本 ----------
 bodyChildren.push(H2("3.8 Computational cost"));
@@ -885,14 +882,8 @@ bodyChildren.push(H2("3.10 Case studies"));
 bodyChildren.push(body(
   "We examine four representative episodes: (Case 1) correct prior + low noise, where all methods detect quickly; (Case 2) wrong prior + high noise, where MuZero recovers through observation while Belief-Greedy fails; (Case 3) consecutive misses, where the agent persists and re-checks; and (Case 4) a false alarm, where the policy correctly revisits and re-evaluates. The belief heatmaps and search trajectories (Figures 3-19 to 3-22) show how each policy's probing logic differs."
 ));
-bodyChildren.push(...figure("case1_correct_prior_low_noise_en.png",
-  "Figure 3-19 Case 1: correct prior + low noise (Easy)"));
-bodyChildren.push(...figure("case2_wrong_prior_recovery_en.png",
-  "Figure 3-20 Case 2: wrong prior + high noise (recovery through observation)"));
-bodyChildren.push(...figure("case3_consecutive_misses_en.png",
-  "Figure 3-21 Case 3: consecutive misses with eventual detection"));
-bodyChildren.push(...figure("case4_false_alarm_en.png",
-  "Figure 3-22 Case 4: episode with a false alarm"));
+bodyChildren.push(...figure("composite_cases.png",
+  "Figure 3-19 Four case studies: (a) correct prior + low noise, (b) wrong prior + high noise, (c) consecutive misses, (d) false alarm"));
 
 // ================= 4. Discussion =================
 bodyChildren.push(H1("4. Discussion"));
@@ -940,7 +931,7 @@ bodyChildren.push(H1("References"));
 for (const r of refs) {
   bodyChildren.push(new Paragraph({
     indent: { left: 420, hanging: 420 },
-    spacing: { line: 360 },
+    spacing: { line: 240 },
     children: [new TextRun({ text: r, size: 21, font: FONT })],
   }));
 }
@@ -999,7 +990,7 @@ const doc = new Document({
   styles: {
     default: { document: {
       run: { font: { ascii: "Times New Roman", eastAsia: "SimSun" }, size: 24, color: "000000" },
-      paragraph: { spacing: { line: 360 } },
+      paragraph: { spacing: { line: 240 } },
     }},
   },
   sections,
