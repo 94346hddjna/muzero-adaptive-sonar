@@ -263,8 +263,8 @@ bodyChildren.push(body(
 bodyChildren.push(body(
   "Conventional active sonar operates in an open-loop mode: the transmitter emits a signal with fixed frequency, pulse width, power, and beam pointing, while the receiver performs beamforming, matched filtering, and CFAR detection on the returns [1][8]. When the target position is highly uncertain and the environment varies, this fixed policy wastes emission resources on low-value bearings, leading to low detection efficiency, high energy cost, and high exposure risk."
 ));
-bodyChildren.push(...figure("fig_cognitive_loop_rich.png",
-  "Figure 1-1 The cognitive sonar adaptive closed-loop detection chain: transmit → observe → cognize → adapt"));
+bodyChildren.push(...figure("fig_cognitive_loop_full.png",
+  "Figure 1-1 The adaptive cognitive sonar closed-loop: (a) four-stage transmit-observe-cognize-adapt cycle, (b) sector grid with belief heatmap and current beam, (c) Swerling-I detection model"));
 bodyChildren.push(body(
   "To overcome these limitations, cognitive sonar was proposed, borrowing from cognitive radar, with the idea of a closed-loop adaptive detection chain: sense, observe, adapt, and re-transmit [6][7]. The sonar actively adjusts its next emission parameters (frequency, pulse width, gain, beam pointing) based on the current echo, matching the transmit signal to the current environment and task objective. However, most existing adaptive strategies rely on heuristic rules or single-step greedy policies — for example, probing harder near a strong echo and moving to adjacent bearings otherwise. Such rules lack multi-step planning and cannot make globally optimal arrangements for which bearings to probe first, which to check next, and when to converge."
 ));
@@ -834,8 +834,8 @@ bodyChildren.push(...figure("fig3d_sector_grid.png",
 bodyChildren.push(body(
   "Belief-Greedy fails completely under biased priors on Hard (SR = 0.000): the greedy policy locks onto the wrong sector and cannot escape within the 20-step budget. Sequential scan is unaffected (SR = 0.432) because it ignores the prior. MuZero recovers partially (SR = 0.278 on Hard with biased prior), showing that its learned policy can correct a wrong prior through observation history — the KL divergence between belief and true target distribution decreases monotonically over pings (Figure 3-10)."
 ));
-bodyChildren.push(...figure("fig_prior_bias_rich.png",
-  "Figure 3-11 Prior-bias robustness: four initial belief types (uniform/correct/biased/adversarial) over 16 sectors with true target marked"));
+bodyChildren.push(...figure("fig_prior_bias_combined.png",
+  "Figure 3-11 Prior-bias robustness: (a)-(d) four initial belief types over 16 sectors, (e) KL divergence correction over pings, (f) success rate under different priors"));
 bodyChildren.push(...figure("17b_kl_correction_en.png",
   "Figure 3-12 Belief correction over pings: KL divergence from true target under different initial priors"));
 
