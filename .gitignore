@@ -23,3 +23,4 @@ kaiti_extracted.md
 results_v2/watchdog*.log
 results_v3/watchdog*.log
 results_v3/wd_*.log
+node_modules/
