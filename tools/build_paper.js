@@ -19,27 +19,44 @@ const C = { primary: "#000000", body: "#000000", caption: "#333333" };
 const FONT = { ascii: "Times New Roman", eastAsia: "SimSun" };
 
 // ---------- helpers ----------
+// 文中引用 [N]（含连续 [30][31][32]）渲染为上标（Springer格式）
+function citeRuns(text, baseOpts = {}) {
+  const parts = [];
+  const re = /\[(?:\d+)(?:[-–,]\s*\d+)?\](?:\[(?:\d+)(?:[-–,]\s*\d+)?\])*/g;
+  let last = 0, m;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) {
+      parts.push(new TextRun({ text: text.slice(last, m.index), size: 24, color: C.body, font: FONT, ...baseOpts }));
+    }
+    parts.push(new TextRun({ text: m[0], size: 24, color: C.body, font: FONT, superScript: true, ...baseOpts }));
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) {
+    parts.push(new TextRun({ text: text.slice(last), size: 24, color: C.body, font: FONT, ...baseOpts }));
+  }
+  return parts;
+}
 function P(text, opts = {}) {
   return new Paragraph({
     alignment: opts.align || AlignmentType.JUSTIFIED,
     indent: opts.indent,
     spacing: { line: 240, ...(opts.spacing || {}) },
-    children: Array.isArray(text) ? text : [new TextRun({ text, size: 24, color: C.body, font: FONT, ...opts.run })],
+    children: Array.isArray(text) ? text : citeRuns(text, opts.run),
   });
 }
 function H1(text) {
   return new Paragraph({ heading: HeadingLevel.HEADING_1, alignment: AlignmentType.CENTER, keepNext: true,
-    spacing: { before: 240, after: 120, line: 280 },
+    spacing: { before: 160, after: 80, line: 280 },
     children: [new TextRun({ text, bold: true, size: 32, color: C.primary, font: FONT })] });
 }
 function H2(text) {
   return new Paragraph({ heading: HeadingLevel.HEADING_2, keepNext: true,
-    spacing: { before: 200, after: 100, line: 280 },
+    spacing: { before: 130, after: 60, line: 280 },
     children: [new TextRun({ text, bold: true, size: 30, color: C.primary, font: FONT })] });
 }
 function H3(text) {
   return new Paragraph({ heading: HeadingLevel.HEADING_3, keepNext: true,
-    spacing: { before: 160, after: 80, line: 280 },
+    spacing: { before: 110, after: 50, line: 280 },
     children: [new TextRun({ text, bold: true, size: 28, color: C.primary, font: FONT })] });
 }
 function body(text) {
@@ -50,7 +67,7 @@ function bodyPlain(text) {
 }
 function caption(text) {
   return new Paragraph({ alignment: AlignmentType.CENTER,
-    spacing: { before: 20, after: 100 },
+    spacing: { before: 10, after: 50 },
     children: [new TextRun({ text, size: 21, color: C.caption, font: FONT })] });
 }
 function fmt(v, p = 3) {
@@ -149,7 +166,7 @@ function figure(imgName, capText, widthInches = 5.5) {
   const dims = PNG_DIMS[imgName] || [1600, 1000];
   const h = Math.round(w * dims[1] / dims[0]);
   return [
-    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 80, after: 20 },
+    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 40, after: 6 },
       children: [new ImageRun({ data: img, transformation: { width: w, height: h }, type: "png" })] }),
     caption(capText),
   ];
@@ -169,12 +186,16 @@ function threeLineTable(header, rows, capText, colWidthsPct = null) {
       children: [new Paragraph({ alignment: AlignmentType.CENTER,
         children: [new TextRun({ text: t, bold: true, size: 20, font: FONT })] })],
     })) });
-  const body = rows.map((r) => {
+  const body = rows.map((r, ri) => {
     const isOurs = String(r[0]).toLowerCase().includes("muzero") || String(r[0]).toLowerCase().includes("ours");
+    const isLast = ri === rows.length - 1;
+    // 三线表：末行加底线（与顶线同粗）
+    const bottomBorder = isLast
+      ? { style: BorderStyle.SINGLE, size: 4, color: "000000" } : NB;
     return new TableRow({ cantSplit: true,
       children: r.map((c, ci) => new TableCell({
         width: { size: widths[ci], type: WidthType.PERCENTAGE },
-        borders: { top: NB, bottom: NB, left: NB, right: NB },
+        borders: { top: NB, bottom: bottomBorder, left: NB, right: NB },
         margins: { top: 30, bottom: 30, left: 80, right: 80 },
         shading: isOurs ? { type: "clear", color: "auto", fill: "EAF3FB" } : undefined,
         children: [new Paragraph({ alignment: AlignmentType.CENTER,
@@ -184,10 +205,10 @@ function threeLineTable(header, rows, capText, colWidthsPct = null) {
   });
   return [
     new Paragraph({ keepNext: true, alignment: AlignmentType.CENTER,
-      spacing: { before: 80, after: 20 },
+      spacing: { before: 60, after: 10 },
       children: [new TextRun({ text: capText, bold: true, size: 21, font: FONT })] }),
     new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: [hdr, ...body] }),
-    new Paragraph({ spacing: { after: 60 }, children: [] }),
+    new Paragraph({ spacing: { after: 20 }, children: [] }),
   ];
 }
 
@@ -199,11 +220,30 @@ function eq(children, num) {
       { type: "center", position: 4500 },
       { type: "right", position: 9000 },
     ],
-    spacing: { before: 30, after: 30, line: 240 },
+    spacing: { before: 16, after: 16, line: 240 },
     children: [
       new TextRun({ text: "\t" }),
       ...children,
       new TextRun({ text: `\t(${num})` }),
+    ],
+  });
+}
+function eq2(line1Children, line2Children, num) {
+  // 两行公式：第二行末尾右侧对齐编号（长公式拆行用）
+  return new Paragraph({
+    alignment: AlignmentType.CENTER,
+    tabStops: [
+      { type: "center", position: 4500 },
+      { type: "right", position: 9000 },
+    ],
+    spacing: { before: 16, after: 16, line: 240 },
+    children: [
+      new TextRun({ text: "	" }),
+      ...line1Children,
+      new TextRun({ text: "", break: 1 }),
+      new TextRun({ text: "	" }),
+      ...line2Children,
+      new TextRun({ text: `	(${num})` }),
     ],
   });
 }
@@ -461,9 +501,13 @@ bodyChildren.push(body(
 bodyChildren.push(body(
   "The reward function combines a sparse success reward with process costs:"
 ));
-bodyChildren.push(eq([
+bodyChildren.push(eq2([
   new OoxmlMath({ children: [
-    new MathRun("r_t = R_hit · 1{o_t=1} − λ_s − λ_f · 1{o_t=1, x≠a_t} − λ_e · C(a_t)"),
+    new MathRun("r_t = R_hit · 1{o_t=1} − λ_s"),
+  ] }),
+], [
+  new OoxmlMath({ children: [
+    new MathRun("− λ_f · 1{o_t=1, x≠a_t} − λ_e · C(a_t)"),
   ] }),
 ], 16));
 bodyChildren.push(body(
