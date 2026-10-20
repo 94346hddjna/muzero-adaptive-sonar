@@ -37,11 +37,15 @@ function citeRuns(text, baseOpts = {}) {
   return parts;
 }
 function P(text, opts = {}) {
+  let children;
+  if (Array.isArray(text)) children = text;            // 已是run数组
+  else if (typeof text === "string") children = citeRuns(text, opts.run);  // 字符串→上标引用解析
+  else children = [text];                              // 单个TextRun等对象直接用
   return new Paragraph({
     alignment: opts.align || AlignmentType.JUSTIFIED,
     indent: opts.indent,
     spacing: { line: 240, ...(opts.spacing || {}) },
-    children: Array.isArray(text) ? text : citeRuns(text, opts.run),
+    children,
   });
 }
 function H1(text) {
@@ -79,6 +83,7 @@ function fmt(v, p = 3) {
 const SCHEMATIC_DIR = path.join(ROOT, "results_v3", "figures", "schematic");
 const PNG_DIMS = {
   "01_training_curves_en.png": [2775, 1172],
+  "07_muzero_vs_womcts_en.png": [1372, 1148],
   "01_training_curves_zh.png": [2776, 1173],
   "02_sr_comparison_en.png": [2070, 1173],
   "02_sr_comparison_zh.png": [2072, 1173],
@@ -162,11 +167,13 @@ function figure(imgName, capText, widthInches = 5.5) {
   }
   if (!fs.existsSync(imgPath)) { console.warn("MISSING FIGURE:", imgName); return []; }
   const img = fs.readFileSync(imgPath);
-  const w = Math.round(widthInches * 96);
   const dims = PNG_DIMS[imgName] || [1600, 1000];
-  const h = Math.round(w * dims[1] / dims[0]);
+  let w = Math.round(widthInches * 96);
+  let h = Math.round(w * dims[1] / dims[0]);
+  const MAXH = Math.round(3.15 * 96);   // 高度上限3.15in，超高图等比缩窄
+  if (h > MAXH) { w = Math.round(w * MAXH / h); h = MAXH; }
   return [
-    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 40, after: 6 },
+    new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, spacing: { before: 40, after: 6 },
       children: [new ImageRun({ data: img, transformation: { width: w, height: h }, type: "png" })] }),
     caption(capText),
   ];
@@ -1076,17 +1083,17 @@ const sections = [];
 sections.push({
   properties: { page: { margin: { top: 1440, bottom: 1440, left: 1701, right: 1417 } } },
   children: [
-    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 1200, after: 400, line: 828, lineRule: "atLeast" },
+    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 480, after: 160, line: 520, lineRule: "atLeast" },
       children: [new TextRun({ text: titleText, bold: true, size: 36, font: { ascii: "Times New Roman", eastAsia: "SimHei" } })] }),
-    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 200, after: 200 },
+    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 100, after: 100 },
       children: [new TextRun({ text: "Rui Tan1, Fei Hu1*", size: 24, font: FONT })] }),
-    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 400 },
+    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 160 },
       children: [new TextRun({ text: "1 School of Computer Science and Engineering (School of Artificial Intelligence), 【University Name】", size: 20, font: FONT })] }),
-    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 100, after: 400 },
+    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 60, after: 160 },
       children: [new TextRun({ text: "*Corresponding author: 【advisor email】", size: 20, font: FONT })] }),
-    P(new TextRun({ text: "Abstract", bold: true, size: 28, font: FONT }), { align: AlignmentType.CENTER, spacing: { before: 200, after: 200 } }),
+    P(new TextRun({ text: "Abstract", bold: true, size: 26, font: FONT }), { align: AlignmentType.CENTER, spacing: { before: 120, after: 100 } }),
     body(abstractText),
-    P(new TextRun({ text: "Keywords: " + keywords, bold: true, size: 24, font: FONT }), { indent: { firstLine: 480 }, spacing: { before: 200 } }),
+    P(new TextRun({ text: "Keywords: " + keywords, bold: true, size: 24, font: FONT }), { indent: { firstLine: 480 }, spacing: { before: 120 } }),
   ],
 });
 
