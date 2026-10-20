@@ -19,6 +19,8 @@ from typing import Dict, List, Optional
 import numpy as np
 
 from agents.dqn import DQNAgent
+from agents.dqn_gru import DQNGRUAgent
+from agents.ppo_stack import PPOStackAgent
 from agents.muzero import MuZeroAgent, temperature_at
 from agents.ppo import PPOAgent
 from env import level1_env, scenarios as scen
@@ -95,7 +97,7 @@ def train_rl(
     device: str = "auto",
 ) -> Dict:
     """训练单个(algorithm, seed, variant)。返回summary（含best_val路径）。"""
-    assert algorithm in ("muzero", "dqn", "ppo"), algorithm
+    assert algorithm in ("muzero", "dqn", "ppo", "dqn_gru", "ppo_stack"), algorithm
     assert variant in VARIANTS, variant
     t_max = 20
     canonical_cells = int(env_cfg.get("canonical_cells", 192))
@@ -138,6 +140,11 @@ def train_rl(
     elif algorithm == "dqn":
         agent = DQNAgent(alg_cfg, D_obs, canonical_cells, device=device, seed=seed,
                          obs_mode=obs_mode)
+    elif algorithm == "dqn_gru":
+        agent = DQNGRUAgent(alg_cfg, D_obs, canonical_cells, device=device, seed=seed,
+                            obs_mode=obs_mode)
+    elif algorithm == "ppo_stack":
+        agent = PPOStackAgent(alg_cfg, 194, stack_k=8, device=device, seed=seed)
     else:
         agent = PPOAgent(alg_cfg, D_obs, canonical_cells, device=device, seed=seed)
     last_ckpt = ckpt_dir / f"{exp_id}_last.ckpt"
@@ -203,7 +210,7 @@ def train_rl(
                 st = agent.update(buffer)
                 if st:
                     last_loss_stats = st
-        elif algorithm == "dqn":
+        elif algorithm in ("dqn", "dqn_gru"):
             for slot in range(num_envs):
                 compact = compact_next = None
                 if obs_mode == "raw_stack":
@@ -218,11 +225,18 @@ def train_rl(
                 st = agent.update()
                 if st:
                     last_loss_stats = st
-        else:  # ppo
-            nv = agent.value_only(obs_next)
+        else:  # ppo / ppo_stack
+            # ppo_stack存堆叠后的观测（stacked在act返回的infos里）；ppo存原始观测
+            if algorithm == "ppo_stack":
+                stacked_next = np.stack([agent._stack_obs(s_, obs_next[s_]) for s_ in range(num_envs)])
+                nv = agent.value_only(stacked_next)
+            else:
+                nv = agent.value_only(obs_next)
             for slot in range(num_envs):
+                obs_to_store = (infos[slot]["stacked"] if algorithm == "ppo_stack"
+                                else obs[slot])
                 agent.store_transition(
-                    obs[slot], int(actions[slot]), float(rewards[slot]), bool(dones[slot]),
+                    obs_to_store, int(actions[slot]), float(rewards[slot]), bool(dones[slot]),
                     float(infos[slot]["logp"]), float(infos[slot]["value"]),
                     int(n_before[slot]), slot, float(nv[slot]))
             if agent.ready_for_update():

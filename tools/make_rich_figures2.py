@@ -220,19 +220,18 @@ def fig_prior_bias_combined():
         rows = list(csv.DictReader(open("results_v3/processed/prior_bias_results.csv",
                                         encoding="utf-8")))
         pts = ["uniform", "correct", "biased", "adversarial"]
-        mz_sr = []
-        bg_sr = []
-        for pt in pts:
-            v = [float(r["SR"]) for r in rows if r.get("prior_type") == pt
-                 and r["algorithm"] == "muzero" and r["SR"]]
-            mz_sr.append(float(np.mean(v)) if v else 0)
-            v2 = [float(r["SR"]) for r in rows if r.get("prior_type") == pt
-                  and r["algorithm"] == "belief_greedy" and r["SR"]]
-            bg_sr.append(float(np.mean(v2)) if v2 else 0)
+        series = [("belief_greedy", "Belief-Greedy", C5),
+                  ("pomcp", "POMCP (known model)", "#4aa87c"),
+                  ("muzero", "MuZero (ours)", C1)]
         x = np.arange(len(pts))
-        w = 0.38
-        ax_sr.bar(x - w / 2, bg_sr, w, color=C5, alpha=0.85, label="Belief-Greedy")
-        ax_sr.bar(x + w / 2, mz_sr, w, color=C1, alpha=0.9, label="MuZero")
+        w = 0.27
+        for k, (algo, label, col) in enumerate(series):
+            vals = []
+            for pt in pts:
+                v = [float(r["SR"]) for r in rows if r.get("prior_type") == pt
+                     and r["algorithm"] == algo and r["SR"]]
+                vals.append(float(np.mean(v)) if v else 0)
+            ax_sr.bar(x + (k - 1) * w, vals, w, color=col, alpha=0.9, label=label)
         ax_sr.set_xticks(x)
         ax_sr.set_xticklabels(pts, fontsize=9)
         ax_sr.set_ylabel("Success Rate", fontsize=10)

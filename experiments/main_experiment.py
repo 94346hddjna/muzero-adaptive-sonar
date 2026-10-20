@@ -108,7 +108,7 @@ def run_all(results_root: Path, smoke: bool = False, device: str = "auto",
         "cuda" if __import__("torch").cuda.is_available() else "cpu")
     seeds = seeds or [101, 102, 103, 104, 105]
     summaries = run_training_stage(results_root, env_cfg, dev, smoke, seeds,
-                                   ["dqn", "ppo", "muzero"])
+                                   ["dqn", "ppo", "muzero", "dqn_gru", "ppo_stack"])
     rows = run_main_test(results_root, env_cfg, dev, smoke, seeds, resume)
     return {"training_summaries": summaries, "main_rows": rows}
 

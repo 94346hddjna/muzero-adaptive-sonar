@@ -19,14 +19,20 @@ try:
 except ImportError:
     HAS_MPL = False
 
-ALGOS = ["sequential", "random", "belief_greedy", "dqn", "ppo", "muzero"]
+ALGOS = ["sequential", "random", "belief_greedy", "pomcp",
+         "dqn", "ppo", "dqn_gru", "ppo_stack", "muzero"]
 ALGO_LABELS_ZH = {"sequential": "顺序扫描", "random": "随机扫描", "belief_greedy": "信念贪心",
-                  "dqn": "DQN", "ppo": "PPO", "muzero": "MuZero"}
+                  "pomcp": "POMCP(已知模型)", "dqn": "DQN", "ppo": "PPO",
+                  "dqn_gru": "DQN-GRU(记忆)", "ppo_stack": "PPO-Stack(记忆)",
+                  "muzero": "MuZero"}
 ALGO_LABELS_EN = {"sequential": "Sequential", "random": "Random",
-                  "belief_greedy": "Belief-Greedy", "dqn": "DQN", "ppo": "PPO",
+                  "belief_greedy": "Belief-Greedy", "pomcp": "POMCP (known model)",
+                  "dqn": "DQN", "ppo": "PPO",
+                  "dqn_gru": "DQN-GRU (memory)", "ppo_stack": "PPO-Stack (memory)",
                   "muzero": "MuZero (ours)"}
 COLORS = {"sequential": "#8c8c8c", "random": "#c7b78a", "belief_greedy": "#e28c4a",
-          "dqn": "#4a90d9", "ppo": "#7a57c7", "muzero": "#d94a4a"}
+          "pomcp": "#4aa87c", "dqn": "#4a90d9", "ppo": "#7a57c7",
+          "dqn_gru": "#2f6fb8", "ppo_stack": "#5b3fa8", "muzero": "#d94a4a"}
 DIFFS_ZH = {"easy": "Easy", "medium": "Medium", "hard": "Hard"}
 
 
@@ -86,7 +92,7 @@ def fig_training_curves(results_root: Path, fig_dir: Path, lang: str):
     log_dir = results_root / "raw" / "training_logs"
     ckpt_dir = results_root / "checkpoints"
     found = False
-    for algo in ["dqn", "ppo", "muzero"]:
+    for algo in ["dqn", "ppo", "dqn_gru", "ppo_stack", "muzero"]:
         for f in sorted(ckpt_dir.glob(f"{algo}/main_seed*/")):
             log_f = f / f"{algo}_main_seed*.csv"
             csvs = sorted(f.glob("*_training_log.csv"))
@@ -281,6 +287,11 @@ def fig_ablations(results_root: Path, fig_dir: Path, lang: str, smoke: bool):
     main_m = [r["SR"] for r in rows if r.get("condition") == cond
               and r.get("algorithm") == "muzero" and r.get("variant") == "main"
               and not r.get("eval_options")]
+    if not main_m:
+        # v3消融阶段的main行均带eval_options（扫描行）→主基准回退到主实验干净值
+        main_rows = _load_processed(results_root / "processed" / "main_results.csv")
+        main_m = [r["SR"] for r in main_rows if r.get("condition") == cond
+                  and r.get("algorithm") == "muzero" and r.get("variant") == "main"]
     wo_m = [r["SR"] for r in rows if r.get("condition") == cond
             and r.get("algorithm") == "muzero" and "use_mcts" in str(r.get("eval_options", ""))]
     labels, _ = _lang_labels(lang)
@@ -301,12 +312,14 @@ def fig_ablations(results_root: Path, fig_dir: Path, lang: str, smoke: bool):
     msims = abl.get("simulations", [25, 50, 100, 200])
     made["08"] = _ablation_fig(
         rows, cond, lambda r, xi: "num_simulations" in str(r.get("eval_options", ""))
-        and f'"num_simulations": {msims[xi]}' in str(r.get("eval_options", "")).replace(".0", ""),
+        and f'"num_simulations": {msims[xi]}' in str(r.get("eval_options", "")).replace(".0", "")
+        and '"planning_depth": 5' in str(r.get("eval_options", "")).replace(".0", ""),
         [f"M={m}" for m in msims], "SR", fig_dir, f"08_sims_vs_performance_{lang}", lang)
     # 9: sims vs latency
     made["09"] = _ablation_fig(
         rows, cond, lambda r, xi: "num_simulations" in str(r.get("eval_options", ""))
-        and f'"num_simulations": {msims[xi]}' in str(r.get("eval_options", "")).replace(".0", ""),
+        and f'"num_simulations": {msims[xi]}' in str(r.get("eval_options", "")).replace(".0", "")
+        and '"planning_depth": 5' in str(r.get("eval_options", "")).replace(".0", ""),
         [f"M={m}" for m in msims], "MeanDecisionLatencyMs", fig_dir,
         f"09_sims_vs_latency_{lang}", lang,
         ylabel=None, ylim=None)
@@ -314,7 +327,8 @@ def fig_ablations(results_root: Path, fig_dir: Path, lang: str, smoke: bool):
     depths = abl.get("planning_depths", [1, 3, 5, 10])
     made["10"] = _ablation_fig(
         rows, cond, lambda r, xi: "planning_depth" in str(r.get("eval_options", ""))
-        and f'"planning_depth": {depths[xi]}' in str(r.get("eval_options", "")).replace(".0", ""),
+        and f'"planning_depth": {depths[xi]}' in str(r.get("eval_options", "")).replace(".0", "")
+        and '"num_simulations": 100' in str(r.get("eval_options", "")).replace(".0", ""),
         [f"D={d}" for d in depths], "SR", fig_dir, f"10_depth_vs_performance_{lang}", lang)
     # 11-14: 信念/记忆/域随机化/奖励（variant对比）
     pairs = [("11_belief_ablation", ["main", "wo_belief"],

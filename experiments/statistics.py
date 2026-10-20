@@ -22,13 +22,17 @@ from utils.io_utils import read_jsonl, write_csv
 PAIR_FAMILIES = [
     ("muzero", "sequential"), ("muzero", "random"), ("muzero", "belief_greedy"),
     ("muzero", "dqn"), ("muzero", "ppo"),
+    # 评审补充基线：记忆增强DQN/PPO、POMDP专用规划器
+    ("muzero", "dqn_gru"), ("muzero", "ppo_stack"), ("muzero", "pomcp"),
 ]
 
 
 def _parse_stem(stem: str):
-    """解析<algo>_<variant>_seed<k>[_suffix]（algo可含下划线）。"""
+    """解析<algo>_<variant>_seed<k>[_suffix]（algo与variant均可含下划线，
+    因此variant锚定到已知集合，algo贪心匹配）。"""
     import re
-    m = re.match(r"(.+?)_(\w+)_seed(\d+)(?:_(\w+))?$", stem)
+    m = re.match(r"(.+)_(main|wo_belief|wo_memory|wo_domain_rand|shaped)"
+                 r"_seed(\d+)(?:_(\w+))?$", stem)
     if not m:
         return None
     return {"algo": m.group(1), "variant": m.group(2),

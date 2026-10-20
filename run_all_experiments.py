@@ -101,7 +101,8 @@ def stage_train(results: Path, smoke: bool, seeds, resume: bool):
     abl_cfg = _ls("ablation", smoke)
     retrain_variants = abl_cfg.get("retrain_variants",
                                    ["wo_belief", "wo_memory", "wo_domain_rand", "shaped"])
-    sums = run_training_stage(results, env_cfg, dev, smoke, seeds, ["dqn", "ppo", "muzero"],
+    sums = run_training_stage(results, env_cfg, dev, smoke, seeds,
+                              ["dqn", "ppo", "muzero", "dqn_gru", "ppo_stack"],
                               variants=["main"])
     if retrain_variants:
         sums += run_training_stage(results, env_cfg, dev, smoke, seeds, ["muzero"],

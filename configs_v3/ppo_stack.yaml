@@ -1,0 +1,15 @@
+ppo_stack:
+  hidden_dims:
+  - 256
+  - 256
+  learning_rate: 0.0003
+  rollout_steps: 1280
+  minibatch_size: 256
+  epochs_per_update: 4
+  clip_epsilon: 0.2
+  gamma: 0.99
+  gae_lambda: 0.95
+  entropy_coef: 0.01
+  value_coef: 0.5
+  max_grad_norm: 0.5
+  weight_decay: 0.0001

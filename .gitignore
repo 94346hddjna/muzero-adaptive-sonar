@@ -24,3 +24,13 @@ results_v2/watchdog*.log
 results_v3/watchdog*.log
 results_v3/wd_*.log
 node_modules/
+
+# 会话临时产物
+results_v3/*.log
+results_v3/paper_check/
+results/_smoketest/
+results_v3/watchdog*.log
+results_v3/ppo_stack_seed*.log
+results_v3/eval_new_baselines*.log
+results_v3/robustness_ext*.log
+results_v3/priorbias_ext*.log

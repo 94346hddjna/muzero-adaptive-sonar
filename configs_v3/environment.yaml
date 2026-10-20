@@ -69,6 +69,9 @@ environment:
     muzero: raw
     dqn: raw_stack
     ppo: raw_stack
+    dqn_gru: raw
+    ppo_stack: raw
+    pomcp: belief
   _v3_note: v3终局轮（盲搜索）：所有智能体仅从原始交互(a,d)历史推断目标——MuZero用GRU记忆+学习式动力学；DQN/PPO用完整历史平铺（信息等价，架构不同）；Belief-Greedy自建名义滤波（懂物理的操作员）。信念不再直接喂给任何学习算法。公平：同信息/同预算/同测试。
 level2:
   fs: 48000.0

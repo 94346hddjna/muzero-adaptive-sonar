@@ -1,0 +1,16 @@
+dqn_gru:
+  hidden_dims:
+  - 256
+  - 256
+  learning_rate: 0.0003
+  batch_size: 128
+  buffer_size: 200000
+  target_update_steps: 2000
+  epsilon_start: 1.0
+  epsilon_final: 0.05
+  epsilon_decay_steps: 200000
+  gamma: 0.99
+  max_grad_norm: 5.0
+  train_every_steps: 4
+  warmup_steps: 5000
+  weight_decay: 0.0001

@@ -13,10 +13,15 @@ import numpy as np
 
 from utils.io_utils import write_csv, write_json
 
-ALGOS = ["sequential", "random", "belief_greedy", "dqn", "ppo", "muzero"]
+ALGOS = ["sequential", "random", "belief_greedy", "pomcp",
+         "dqn", "ppo", "dqn_gru", "ppo_stack", "muzero"]
 ALGO_NAMES = {"sequential": "Sequential", "random": "Random",
-              "belief_greedy": "Belief-Greedy", "dqn": "DQN", "ppo": "PPO",
+              "belief_greedy": "Belief-Greedy",
+              "pomcp": "POMCP (known model)",
+              "dqn": "DQN", "ppo": "PPO",
+              "dqn_gru": "DQN-GRU (memory)", "ppo_stack": "PPO-Stack (memory)",
               "muzero": "MuZero (ours)"}
+TRAIN_FREE = ("sequential", "random", "belief_greedy", "pomcp")
 
 
 def _load(path: Path) -> List[Dict]:
@@ -52,6 +57,15 @@ def _alg_mean_std(rows, algo, metric, condition=None, variant=None):
     if not vals:
         return None, None
     return float(np.mean(vals)), float(np.std(vals))
+
+
+def _train_budget(smoke: bool) -> int:
+    """从训练配置读取真实预算（禁止硬编码）。"""
+    try:
+        from utils.config import load_section
+        return int(load_section("training", smoke)["total_env_steps"])
+    except Exception:
+        return 2000000
 
 
 def _write_table(name: str, header: List[str], rows: List[List], tables_dir: Path,
@@ -116,7 +130,7 @@ def run_tables(results_root: Path, smoke: bool = False) -> Dict:
             ALGO_NAMES[algo],
             _fmt(np.mean(wall) if wall else None, 0),
             _fmt(lat_m, 2), _fmt(lat_s, 2),
-            "—" if algo in ("sequential", "random", "belief_greedy") else "1000000",
+            "—" if algo in TRAIN_FREE else str(_train_budget(smoke)),
         ])
     _write_table("table7_computational_cost",
                  ["Method", "Training wall-clock (s, mean)", "Decision latency (ms, mean)",
@@ -191,7 +205,7 @@ def run_tables(results_root: Path, smoke: bool = False) -> Dict:
                 vals = [r["SR"] for r in abl
                         if r.get("condition") == cond and r.get("algorithm") == "muzero"
                         and f'"num_simulations": {M}' in str(r.get("eval_options", "")).replace(".0", "")
-                        and "planning_depth" in str(r.get("eval_options", ""))
+                        and '"planning_depth": 5' in str(r.get("eval_options", "")).replace(".0", "")
                         and isinstance(r.get("SR"), (int, float))]
                 row.append(f"{_fmt(np.mean(vals))}±{_fmt(np.std(vals))}" if vals else "—")
             rows4.append(row)
@@ -201,6 +215,7 @@ def run_tables(results_root: Path, smoke: bool = False) -> Dict:
                 vals = [r["SR"] for r in abl
                         if r.get("condition") == cond and r.get("algorithm") == "muzero"
                         and f'"planning_depth": {D}' in str(r.get("eval_options", "")).replace(".0", "")
+                        and '"num_simulations": 100' in str(r.get("eval_options", "")).replace(".0", "")
                         and isinstance(r.get("SR"), (int, float))]
                 row.append(f"{_fmt(np.mean(vals))}±{_fmt(np.std(vals))}" if vals else "—")
             rows4.append(row)

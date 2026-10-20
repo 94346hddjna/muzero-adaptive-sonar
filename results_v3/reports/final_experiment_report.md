@@ -52,9 +52,12 @@ Sequential（顺序扫描）、Random（随机扫描）、Belief-Greedy（式(27
 |Sequential|0.999|0.899|0.432|8.838|10.975|0.052|
 |Random|0.914|0.663|0.364|8.686|15.864|0.051|
 |Belief-Greedy|0.999|0.960|0.000|2.143|3.257|0.058|
+|POMCP (known model)|0.998|0.911|0.173|5.793|7.958|0.052|
 |DQN|0.478|0.335|0.132|6.675|22.221|0.050|
 |PPO|0.471|0.303|0.108|11.340|24.326|0.049|
-|MuZero|0.725|0.679|0.278|8.937|15.677|0.050|
+|DQN-GRU (memory)|0.820|0.448|0.099|9.028|20.591|0.050|
+|PPO-Stack (memory)|0.448|0.339|0.131|6.640|22.141|0.049|
+|MuZero (ours)|0.725|0.679|0.278|8.937|15.677|0.050|
 
 样本效率（达到SR≥0.90所需环境步，未达到则标'未达到'）：
 
@@ -62,11 +65,11 @@ Sequential（顺序扫描）、Random（随机扫描）、Belief-Greedy（式(27
 
 - PPO: 未达到阈值
 
-- MuZero: 未达到阈值
+- MuZero (ours): 未达到阈值
 
 ## 10. Statistical Tests
 
-共152项配对检验（Holm校正，α=0.05），其中125项显著。详见results/statistics/statistical_tests.csv与effect_sizes.csv。
+共284项配对检验（Holm校正，α=0.05），其中257项显著。详见results/statistics/statistical_tests.csv与effect_sizes.csv。
 
 - easy: muzero(full) vs muzero(main|woMCTS): ΔSR=0.082, p=0.0000, cohens_dz=0.223
 
@@ -98,225 +101,489 @@ Sequential（顺序扫描）、Random（随机扫描）、Belief-Greedy（式(27
 
 - easy: muzero vs random: ΔSR=-0.189, p=0.0000, cohens_dz=-0.681
 
+- easy: muzero vs belief_greedy: ΔSR=-0.274, p=0.0000, cohens_dz=-1.095
+
 - easy: muzero vs dqn: ΔSR=0.247, p=0.0000, cohens_dz=0.857
 
 - easy: muzero vs ppo: ΔSR=0.254, p=0.0000, cohens_dz=1.079
+
+- easy: muzero vs dqn_gru: ΔSR=-0.095, p=0.0000, cohens_dz=-0.404
+
+- easy: muzero vs ppo_stack: ΔSR=0.277, p=0.0000, cohens_dz=0.802
+
+- easy: muzero vs pomcp: ΔSR=-0.273, p=0.0000, cohens_dz=-1.087
 
 - hard: muzero vs sequential: ΔSR=-0.154, p=0.0000, cohens_dz=-0.315
 
 - hard: muzero vs random: ΔSR=-0.086, p=0.0000, cohens_dz=-0.301
 
+- hard: muzero vs belief_greedy: ΔSR=0.278, p=0.0000, cohens_dz=1.398
+
 - hard: muzero vs dqn: ΔSR=0.146, p=0.0000, cohens_dz=0.594
 
 - hard: muzero vs ppo: ΔSR=0.170, p=0.0000, cohens_dz=0.592
 
+- hard: muzero vs dqn_gru: ΔSR=0.179, p=0.0000, cohens_dz=0.745
+
+- hard: muzero vs ppo_stack: ΔSR=0.146, p=0.0000, cohens_dz=0.582
+
+- hard: muzero vs pomcp: ΔSR=0.104, p=0.0000, cohens_dz=0.393
+
 - medium: muzero vs sequential: ΔSR=-0.220, p=0.0000, cohens_dz=-0.602
+
+- medium: muzero vs belief_greedy: ΔSR=-0.281, p=0.0000, cohens_dz=-0.882
 
 - medium: muzero vs dqn: ΔSR=0.344, p=0.0000, cohens_dz=1.045
 
 - medium: muzero vs ppo: ΔSR=0.376, p=0.0000, cohens_dz=1.074
 
+- medium: muzero vs dqn_gru: ΔSR=0.230, p=0.0000, cohens_dz=0.587
+
+- medium: muzero vs ppo_stack: ΔSR=0.340, p=0.0000, cohens_dz=0.929
+
+- medium: muzero vs pomcp: ΔSR=-0.232, p=0.0000, cohens_dz=-0.803
+
 - id: muzero vs sequential: ΔSR=-0.207, p=0.0000, cohens_dz=-0.547
+
+- id: muzero vs belief_greedy: ΔSR=-0.295, p=0.0000, cohens_dz=-0.984
 
 - id: muzero vs dqn: ΔSR=0.344, p=0.0000, cohens_dz=1.045
 
 - id: muzero vs ppo: ΔSR=0.342, p=0.0000, cohens_dz=0.923
 
+- id: muzero vs dqn_gru: ΔSR=0.206, p=0.0000, cohens_dz=0.521
+
+- id: muzero vs ppo_stack: ΔSR=0.317, p=0.0000, cohens_dz=0.831
+
+- id: muzero vs pomcp: ΔSR=-0.246, p=0.0000, cohens_dz=-0.868
+
 - ood_n: muzero vs sequential: ΔSR=-0.157, p=0.0000, cohens_dz=-0.350
 
 - ood_n: muzero vs random: ΔSR=-0.107, p=0.0000, cohens_dz=-0.313
+
+- ood_n: muzero vs belief_greedy: ΔSR=-0.787, p=0.0000, cohens_dz=-2.402
 
 - ood_n: muzero vs dqn: ΔSR=0.118, p=0.0000, cohens_dz=0.368
 
 - ood_n: muzero vs ppo: ΔSR=0.141, p=0.0000, cohens_dz=0.478
 
+- ood_n: muzero vs dqn_gru: ΔSR=0.102, p=0.0000, cohens_dz=0.351
+
+- ood_n: muzero vs ppo_stack: ΔSR=0.126, p=0.0000, cohens_dz=0.416
+
+- ood_n: muzero vs pomcp: ΔSR=-0.686, p=0.0000, cohens_dz=-2.007
+
 - ood_pfa: muzero vs sequential: ΔSR=-0.226, p=0.0000, cohens_dz=-0.602
+
+- ood_pfa: muzero vs belief_greedy: ΔSR=-0.300, p=0.0000, cohens_dz=-0.900
 
 - ood_pfa: muzero vs dqn: ΔSR=0.313, p=0.0000, cohens_dz=0.958
 
 - ood_pfa: muzero vs ppo: ΔSR=0.383, p=0.0000, cohens_dz=1.139
 
+- ood_pfa: muzero vs dqn_gru: ΔSR=0.191, p=0.0000, cohens_dz=0.503
+
+- ood_pfa: muzero vs ppo_stack: ΔSR=0.303, p=0.0000, cohens_dz=0.868
+
+- ood_pfa: muzero vs pomcp: ΔSR=-0.234, p=0.0000, cohens_dz=-0.741
+
 - ood_prior: muzero vs sequential: ΔSR=-0.188, p=0.0000, cohens_dz=-0.472
+
+- ood_prior: muzero vs belief_greedy: ΔSR=0.686, p=0.0000, cohens_dz=2.690
 
 - ood_prior: muzero vs dqn: ΔSR=0.346, p=0.0000, cohens_dz=1.039
 
 - ood_prior: muzero vs ppo: ΔSR=0.384, p=0.0000, cohens_dz=1.026
 
+- ood_prior: muzero vs dqn_gru: ΔSR=0.234, p=0.0000, cohens_dz=0.606
+
+- ood_prior: muzero vs ppo_stack: ΔSR=0.344, p=0.0000, cohens_dz=0.928
+
+- ood_prior: muzero vs pomcp: ΔSR=0.371, p=0.0000, cohens_dz=1.167
+
 - ood_reverb: muzero vs sequential: ΔSR=-0.215, p=0.0000, cohens_dz=-0.557
+
+- ood_reverb: muzero vs belief_greedy: ΔSR=-0.287, p=0.0000, cohens_dz=-0.876
 
 - ood_reverb: muzero vs dqn: ΔSR=0.331, p=0.0000, cohens_dz=1.006
 
 - ood_reverb: muzero vs ppo: ΔSR=0.367, p=0.0000, cohens_dz=1.016
 
+- ood_reverb: muzero vs dqn_gru: ΔSR=0.196, p=0.0000, cohens_dz=0.511
+
+- ood_reverb: muzero vs ppo_stack: ΔSR=0.310, p=0.0000, cohens_dz=0.847
+
+- ood_reverb: muzero vs pomcp: ΔSR=-0.239, p=0.0000, cohens_dz=-0.786
+
 - ood_snr: muzero vs sequential: ΔSR=-0.236, p=0.0000, cohens_dz=-0.782
+
+- ood_snr: muzero vs belief_greedy: ΔSR=-0.262, p=0.0000, cohens_dz=-1.011
 
 - ood_snr: muzero vs dqn: ΔSR=0.384, p=0.0000, cohens_dz=1.223
 
 - ood_snr: muzero vs ppo: ΔSR=0.423, p=0.0000, cohens_dz=1.184
 
+- ood_snr: muzero vs dqn_gru: ΔSR=0.259, p=0.0000, cohens_dz=0.669
+
+- ood_snr: muzero vs ppo_stack: ΔSR=0.380, p=0.0000, cohens_dz=1.044
+
+- ood_snr: muzero vs pomcp: ΔSR=-0.242, p=0.0000, cohens_dz=-0.903
+
 - adversarial: muzero vs sequential: ΔSR=-0.195, p=0.0000, cohens_dz=-0.498
 
 - adversarial: muzero vs random: ΔSR=0.029, p=0.0060, cohens_dz=0.087
+
+- adversarial: muzero vs belief_greedy: ΔSR=0.683, p=0.0000, cohens_dz=2.516
 
 - adversarial: muzero vs dqn: ΔSR=0.347, p=0.0000, cohens_dz=1.074
 
 - adversarial: muzero vs ppo: ΔSR=0.388, p=0.0000, cohens_dz=1.119
 
+- adversarial: muzero vs dqn_gru: ΔSR=0.234, p=0.0000, cohens_dz=0.602
+
+- adversarial: muzero vs ppo_stack: ΔSR=0.349, p=0.0000, cohens_dz=0.971
+
+- adversarial: muzero vs pomcp: ΔSR=0.366, p=0.0000, cohens_dz=1.125
+
 - biased: muzero vs sequential: ΔSR=-0.195, p=0.0000, cohens_dz=-0.498
 
 - biased: muzero vs random: ΔSR=0.029, p=0.0060, cohens_dz=0.087
+
+- biased: muzero vs belief_greedy: ΔSR=0.261, p=0.0000, cohens_dz=0.480
 
 - biased: muzero vs dqn: ΔSR=0.347, p=0.0000, cohens_dz=1.074
 
 - biased: muzero vs ppo: ΔSR=0.388, p=0.0000, cohens_dz=1.119
 
+- biased: muzero vs dqn_gru: ΔSR=0.234, p=0.0000, cohens_dz=0.602
+
+- biased: muzero vs ppo_stack: ΔSR=0.349, p=0.0000, cohens_dz=0.971
+
+- biased: muzero vs pomcp: ΔSR=0.136, p=0.0000, cohens_dz=0.361
+
 - correct: muzero vs sequential: ΔSR=-0.195, p=0.0000, cohens_dz=-0.498
 
 - correct: muzero vs random: ΔSR=0.029, p=0.0060, cohens_dz=0.087
+
+- correct: muzero vs belief_greedy: ΔSR=-0.279, p=0.0000, cohens_dz=-0.893
 
 - correct: muzero vs dqn: ΔSR=0.347, p=0.0000, cohens_dz=1.074
 
 - correct: muzero vs ppo: ΔSR=0.388, p=0.0000, cohens_dz=1.119
 
+- correct: muzero vs dqn_gru: ΔSR=0.234, p=0.0000, cohens_dz=0.602
+
+- correct: muzero vs ppo_stack: ΔSR=0.349, p=0.0000, cohens_dz=0.971
+
+- correct: muzero vs pomcp: ΔSR=-0.226, p=0.0000, cohens_dz=-0.763
+
 - uniform: muzero vs sequential: ΔSR=-0.195, p=0.0000, cohens_dz=-0.498
 
 - uniform: muzero vs random: ΔSR=0.029, p=0.0060, cohens_dz=0.087
+
+- uniform: muzero vs belief_greedy: ΔSR=-0.164, p=0.0000, cohens_dz=-0.394
 
 - uniform: muzero vs dqn: ΔSR=0.347, p=0.0000, cohens_dz=1.074
 
 - uniform: muzero vs ppo: ΔSR=0.388, p=0.0000, cohens_dz=1.119
 
+- uniform: muzero vs dqn_gru: ΔSR=0.234, p=0.0000, cohens_dz=0.602
+
+- uniform: muzero vs ppo_stack: ΔSR=0.349, p=0.0000, cohens_dz=0.971
+
+- uniform: muzero vs pomcp: ΔSR=-0.088, p=0.0000, cohens_dz=-0.274
+
 - N16: muzero vs sequential: ΔSR=-0.215, p=0.0000, cohens_dz=-0.549
+
+- N16: muzero vs belief_greedy: ΔSR=-0.297, p=0.0000, cohens_dz=-0.997
 
 - N16: muzero vs dqn: ΔSR=0.357, p=0.0000, cohens_dz=1.051
 
 - N16: muzero vs ppo: ΔSR=0.384, p=0.0000, cohens_dz=1.081
 
+- N16: muzero vs dqn_gru: ΔSR=0.215, p=0.0000, cohens_dz=0.524
+
+- N16: muzero vs ppo_stack: ΔSR=0.329, p=0.0000, cohens_dz=0.925
+
+- N16: muzero vs pomcp: ΔSR=-0.251, p=0.0000, cohens_dz=-0.864
+
 - N24: muzero vs sequential: ΔSR=-0.433, p=0.0000, cohens_dz=-0.790
 
 - N24: muzero vs random: ΔSR=-0.238, p=0.0000, cohens_dz=-0.580
+
+- N24: muzero vs belief_greedy: ΔSR=-0.699, p=0.0000, cohens_dz=-1.802
 
 - N24: muzero vs dqn: ΔSR=0.162, p=0.0000, cohens_dz=0.422
 
 - N24: muzero vs ppo: ΔSR=0.118, p=0.0000, cohens_dz=0.269
 
+- N24: muzero vs dqn_gru: ΔSR=0.040, p=0.0259, cohens_dz=0.100
+
+- N24: muzero vs ppo_stack: ΔSR=0.073, p=0.0000, cohens_dz=0.199
+
+- N24: muzero vs pomcp: ΔSR=-0.636, p=0.0000, cohens_dz=-1.713
+
 - N32: muzero vs sequential: ΔSR=-0.213, p=0.0000, cohens_dz=-0.441
 
 - N32: muzero vs random: ΔSR=-0.102, p=0.0000, cohens_dz=-0.347
+
+- N32: muzero vs belief_greedy: ΔSR=-0.675, p=0.0000, cohens_dz=-2.897
 
 - N32: muzero vs dqn: ΔSR=0.150, p=0.0000, cohens_dz=0.647
 
 - N32: muzero vs ppo: ΔSR=0.200, p=0.0000, cohens_dz=0.793
 
+- N32: muzero vs dqn_gru: ΔSR=0.192, p=0.0000, cohens_dz=0.833
+
+- N32: muzero vs ppo_stack: ΔSR=0.163, p=0.0000, cohens_dz=0.656
+
+- N32: muzero vs pomcp: ΔSR=-0.601, p=0.0000, cohens_dz=-2.387
+
 - N48: muzero vs sequential: ΔSR=-0.178, p=0.0000, cohens_dz=-0.388
 
 - N48: muzero vs random: ΔSR=-0.102, p=0.0000, cohens_dz=-0.294
+
+- N48: muzero vs belief_greedy: ΔSR=-0.784, p=0.0000, cohens_dz=-2.350
 
 - N48: muzero vs dqn: ΔSR=0.145, p=0.0000, cohens_dz=0.437
 
 - N48: muzero vs ppo: ΔSR=0.118, p=0.0000, cohens_dz=0.387
 
+- N48: muzero vs dqn_gru: ΔSR=0.126, p=0.0000, cohens_dz=0.400
+
+- N48: muzero vs ppo_stack: ΔSR=0.126, p=0.0000, cohens_dz=0.376
+
+- N48: muzero vs pomcp: ΔSR=-0.680, p=0.0000, cohens_dz=-1.874
+
 - N64: muzero vs sequential: ΔSR=-0.225, p=0.0000, cohens_dz=-0.521
 
 - N64: muzero vs random: ΔSR=-0.153, p=0.0000, cohens_dz=-0.563
 
-- N64: muzero vs dqn: ΔSR=0.038, p=0.0001, cohens_dz=0.176
+- N64: muzero vs belief_greedy: ΔSR=-0.909, p=0.0000, cohens_dz=-3.918
+
+- N64: muzero vs dqn: ΔSR=0.038, p=0.0003, cohens_dz=0.176
 
 - N64: muzero vs ppo: ΔSR=0.038, p=0.0000, cohens_dz=0.279
+
+- N64: muzero vs dqn_gru: ΔSR=0.033, p=0.0014, cohens_dz=0.153
+
+- N64: muzero vs ppo_stack: ΔSR=0.026, p=0.0058, cohens_dz=0.124
+
+- N64: muzero vs pomcp: ΔSR=-0.772, p=0.0000, cohens_dz=-2.362
 
 - N8: muzero vs sequential: ΔSR=-0.266, p=0.0000, cohens_dz=-0.945
 
 - N8: muzero vs random: ΔSR=-0.189, p=0.0000, cohens_dz=-0.674
 
+- N8: muzero vs belief_greedy: ΔSR=-0.280, p=0.0000, cohens_dz=-1.068
+
 - N8: muzero vs dqn: ΔSR=0.216, p=0.0000, cohens_dz=0.680
 
 - N8: muzero vs ppo: ΔSR=0.270, p=0.0000, cohens_dz=1.096
 
+- N8: muzero vs dqn_gru: ΔSR=-0.081, p=0.0000, cohens_dz=-0.312
+
+- N8: muzero vs ppo_stack: ΔSR=0.281, p=0.0000, cohens_dz=0.836
+
+- N8: muzero vs pomcp: ΔSR=-0.257, p=0.0000, cohens_dz=-0.974
+
 - pfa_0.01: muzero vs sequential: ΔSR=-0.188, p=0.0000, cohens_dz=-0.476
+
+- pfa_0.01: muzero vs belief_greedy: ΔSR=-0.286, p=0.0000, cohens_dz=-0.987
 
 - pfa_0.01: muzero vs dqn: ΔSR=0.338, p=0.0000, cohens_dz=1.027
 
 - pfa_0.01: muzero vs ppo: ΔSR=0.356, p=0.0000, cohens_dz=1.017
 
+- pfa_0.01: muzero vs dqn_gru: ΔSR=0.230, p=0.0000, cohens_dz=0.593
+
+- pfa_0.01: muzero vs ppo_stack: ΔSR=0.360, p=0.0000, cohens_dz=0.991
+
+- pfa_0.01: muzero vs pomcp: ΔSR=-0.252, p=0.0000, cohens_dz=-0.920
+
 - pfa_0.03: muzero vs sequential: ΔSR=-0.207, p=0.0000, cohens_dz=-0.522
+
+- pfa_0.03: muzero vs belief_greedy: ΔSR=-0.271, p=0.0000, cohens_dz=-0.860
 
 - pfa_0.03: muzero vs dqn: ΔSR=0.344, p=0.0000, cohens_dz=1.033
 
 - pfa_0.03: muzero vs ppo: ΔSR=0.368, p=0.0000, cohens_dz=1.028
 
+- pfa_0.03: muzero vs dqn_gru: ΔSR=0.217, p=0.0000, cohens_dz=0.553
+
+- pfa_0.03: muzero vs ppo_stack: ΔSR=0.325, p=0.0000, cohens_dz=0.878
+
+- pfa_0.03: muzero vs pomcp: ΔSR=-0.237, p=0.0000, cohens_dz=-0.846
+
 - pfa_0.05: muzero vs sequential: ΔSR=-0.183, p=0.0000, cohens_dz=-0.444
+
+- pfa_0.05: muzero vs belief_greedy: ΔSR=-0.293, p=0.0000, cohens_dz=-0.971
 
 - pfa_0.05: muzero vs dqn: ΔSR=0.339, p=0.0000, cohens_dz=1.053
 
 - pfa_0.05: muzero vs ppo: ΔSR=0.390, p=0.0000, cohens_dz=1.098
 
+- pfa_0.05: muzero vs dqn_gru: ΔSR=0.211, p=0.0000, cohens_dz=0.548
+
+- pfa_0.05: muzero vs ppo_stack: ΔSR=0.357, p=0.0000, cohens_dz=0.997
+
+- pfa_0.05: muzero vs pomcp: ΔSR=-0.245, p=0.0000, cohens_dz=-0.867
+
 - pfa_0.08: muzero vs sequential: ΔSR=-0.184, p=0.0000, cohens_dz=-0.423
+
+- pfa_0.08: muzero vs belief_greedy: ΔSR=-0.282, p=0.0000, cohens_dz=-0.837
 
 - pfa_0.08: muzero vs dqn: ΔSR=0.327, p=0.0000, cohens_dz=0.950
 
 - pfa_0.08: muzero vs ppo: ΔSR=0.355, p=0.0000, cohens_dz=0.962
 
+- pfa_0.08: muzero vs dqn_gru: ΔSR=0.196, p=0.0000, cohens_dz=0.502
+
+- pfa_0.08: muzero vs ppo_stack: ΔSR=0.294, p=0.0000, cohens_dz=0.801
+
+- pfa_0.08: muzero vs pomcp: ΔSR=-0.234, p=0.0000, cohens_dz=-0.785
+
 - pfa_0.10: muzero vs sequential: ΔSR=-0.231, p=0.0000, cohens_dz=-0.590
+
+- pfa_0.10: muzero vs belief_greedy: ΔSR=-0.293, p=0.0000, cohens_dz=-0.906
 
 - pfa_0.10: muzero vs dqn: ΔSR=0.336, p=0.0000, cohens_dz=0.988
 
 - pfa_0.10: muzero vs ppo: ΔSR=0.356, p=0.0000, cohens_dz=0.977
 
+- pfa_0.10: muzero vs dqn_gru: ΔSR=0.211, p=0.0000, cohens_dz=0.535
+
+- pfa_0.10: muzero vs ppo_stack: ΔSR=0.297, p=0.0000, cohens_dz=0.821
+
+- pfa_0.10: muzero vs pomcp: ΔSR=-0.232, p=0.0000, cohens_dz=-0.786
+
 - pfa_0.12: muzero vs sequential: ΔSR=-0.222, p=0.0000, cohens_dz=-0.571
+
+- pfa_0.12: muzero vs belief_greedy: ΔSR=-0.306, p=0.0000, cohens_dz=-1.002
 
 - pfa_0.12: muzero vs dqn: ΔSR=0.321, p=0.0000, cohens_dz=0.996
 
 - pfa_0.12: muzero vs ppo: ΔSR=0.384, p=0.0000, cohens_dz=1.125
 
+- pfa_0.12: muzero vs dqn_gru: ΔSR=0.207, p=0.0000, cohens_dz=0.541
+
+- pfa_0.12: muzero vs ppo_stack: ΔSR=0.315, p=0.0000, cohens_dz=0.896
+
+- pfa_0.12: muzero vs pomcp: ΔSR=-0.242, p=0.0000, cohens_dz=-0.826
+
 - pfa_0.15: muzero vs sequential: ΔSR=-0.226, p=0.0000, cohens_dz=-0.594
+
+- pfa_0.15: muzero vs belief_greedy: ΔSR=-0.282, p=0.0000, cohens_dz=-0.893
 
 - pfa_0.15: muzero vs dqn: ΔSR=0.344, p=0.0000, cohens_dz=1.118
 
 - pfa_0.15: muzero vs ppo: ΔSR=0.402, p=0.0000, cohens_dz=1.148
 
+- pfa_0.15: muzero vs dqn_gru: ΔSR=0.217, p=0.0000, cohens_dz=0.584
+
+- pfa_0.15: muzero vs ppo_stack: ΔSR=0.313, p=0.0000, cohens_dz=0.889
+
+- pfa_0.15: muzero vs pomcp: ΔSR=-0.211, p=0.0000, cohens_dz=-0.703
+
 - snr_+0dB: muzero vs sequential: ΔSR=-0.202, p=0.0000, cohens_dz=-0.510
 
 - snr_+0dB: muzero vs random: ΔSR=0.038, p=0.0116, cohens_dz=0.113
+
+- snr_+0dB: muzero vs belief_greedy: ΔSR=-0.270, p=0.0000, cohens_dz=-0.839
 
 - snr_+0dB: muzero vs dqn: ΔSR=0.353, p=0.0000, cohens_dz=1.119
 
 - snr_+0dB: muzero vs ppo: ΔSR=0.388, p=0.0000, cohens_dz=1.064
 
+- snr_+0dB: muzero vs dqn_gru: ΔSR=0.242, p=0.0000, cohens_dz=0.628
+
+- snr_+0dB: muzero vs ppo_stack: ΔSR=0.356, p=0.0000, cohens_dz=0.964
+
+- snr_+0dB: muzero vs pomcp: ΔSR=-0.224, p=0.0000, cohens_dz=-0.760
+
 - snr_+10dB: muzero vs sequential: ΔSR=-0.254, p=0.0000, cohens_dz=-0.969
+
+- snr_+10dB: muzero vs belief_greedy: ΔSR=-0.266, p=0.0000, cohens_dz=-1.058
 
 - snr_+10dB: muzero vs dqn: ΔSR=0.377, p=0.0000, cohens_dz=1.202
 
 - snr_+10dB: muzero vs ppo: ΔSR=0.430, p=0.0000, cohens_dz=1.318
 
+- snr_+10dB: muzero vs dqn_gru: ΔSR=0.242, p=0.0000, cohens_dz=0.635
+
+- snr_+10dB: muzero vs ppo_stack: ΔSR=0.396, p=0.0000, cohens_dz=1.168
+
+- snr_+10dB: muzero vs pomcp: ΔSR=-0.256, p=0.0000, cohens_dz=-0.994
+
 - snr_+3dB: muzero vs sequential: ΔSR=-0.232, p=0.0000, cohens_dz=-0.663
+
+- snr_+3dB: muzero vs belief_greedy: ΔSR=-0.284, p=0.0000, cohens_dz=-0.977
 
 - snr_+3dB: muzero vs dqn: ΔSR=0.389, p=0.0000, cohens_dz=1.170
 
 - snr_+3dB: muzero vs ppo: ΔSR=0.424, p=0.0000, cohens_dz=1.217
 
+- snr_+3dB: muzero vs dqn_gru: ΔSR=0.240, p=0.0000, cohens_dz=0.579
+
+- snr_+3dB: muzero vs ppo_stack: ΔSR=0.370, p=0.0000, cohens_dz=1.068
+
+- snr_+3dB: muzero vs pomcp: ΔSR=-0.250, p=0.0000, cohens_dz=-0.865
+
 - snr_+6dB: muzero vs sequential: ΔSR=-0.230, p=0.0000, cohens_dz=-0.675
+
+- snr_+6dB: muzero vs belief_greedy: ΔSR=-0.274, p=0.0000, cohens_dz=-1.061
 
 - snr_+6dB: muzero vs dqn: ΔSR=0.398, p=0.0000, cohens_dz=1.209
 
 - snr_+6dB: muzero vs ppo: ΔSR=0.404, p=0.0000, cohens_dz=1.112
 
+- snr_+6dB: muzero vs dqn_gru: ΔSR=0.262, p=0.0000, cohens_dz=0.632
+
+- snr_+6dB: muzero vs ppo_stack: ΔSR=0.369, p=0.0000, cohens_dz=1.018
+
+- snr_+6dB: muzero vs pomcp: ΔSR=-0.250, p=0.0000, cohens_dz=-0.930
+
 - snr_-10dB: muzero vs sequential: ΔSR=-0.092, p=0.0000, cohens_dz=-0.191
+
+- snr_-10dB: muzero vs belief_greedy: ΔSR=-0.320, p=0.0000, cohens_dz=-0.763
 
 - snr_-10dB: muzero vs dqn: ΔSR=0.187, p=0.0000, cohens_dz=0.601
 
 - snr_-10dB: muzero vs ppo: ΔSR=0.206, p=0.0000, cohens_dz=0.580
 
+- snr_-10dB: muzero vs dqn_gru: ΔSR=0.108, p=0.0000, cohens_dz=0.304
+
+- snr_-10dB: muzero vs ppo_stack: ΔSR=0.168, p=0.0000, cohens_dz=0.467
+
+- snr_-10dB: muzero vs pomcp: ΔSR=-0.164, p=0.0000, cohens_dz=-0.543
+
 - snr_-3dB: muzero vs sequential: ΔSR=-0.226, p=0.0000, cohens_dz=-0.524
+
+- snr_-3dB: muzero vs belief_greedy: ΔSR=-0.292, p=0.0000, cohens_dz=-0.786
 
 - snr_-3dB: muzero vs dqn: ΔSR=0.299, p=0.0000, cohens_dz=0.903
 
 - snr_-3dB: muzero vs ppo: ΔSR=0.344, p=0.0000, cohens_dz=0.944
 
+- snr_-3dB: muzero vs dqn_gru: ΔSR=0.192, p=0.0000, cohens_dz=0.493
+
+- snr_-3dB: muzero vs ppo_stack: ΔSR=0.299, p=0.0000, cohens_dz=0.829
+
+- snr_-3dB: muzero vs pomcp: ΔSR=-0.230, p=0.0000, cohens_dz=-0.733
+
 - snr_-6dB: muzero vs sequential: ΔSR=-0.169, p=0.0000, cohens_dz=-0.376
+
+- snr_-6dB: muzero vs belief_greedy: ΔSR=-0.321, p=0.0000, cohens_dz=-0.805
 
 - snr_-6dB: muzero vs dqn: ΔSR=0.267, p=0.0000, cohens_dz=0.821
 
 - snr_-6dB: muzero vs ppo: ΔSR=0.278, p=0.0000, cohens_dz=0.756
+
+- snr_-6dB: muzero vs dqn_gru: ΔSR=0.163, p=0.0000, cohens_dz=0.433
+
+- snr_-6dB: muzero vs ppo_stack: ΔSR=0.216, p=0.0000, cohens_dz=0.597
+
+- snr_-6dB: muzero vs pomcp: ΔSR=-0.214, p=0.0000, cohens_dz=-0.693
 
 ## 11. Ablation Studies
 
@@ -357,9 +624,12 @@ Sequential（顺序扫描）、Random（随机扫描）、Belief-Greedy（式(27
 |Sequential|0.882|0.974|0.872|0.338|0.874|0.880|
 |Random|0.660|0.716|0.644|0.288|0.665|0.656|
 |Belief-Greedy|0.970|1.000|0.946|0.968|0.000|0.952|
+|POMCP (known model)|0.921|0.980|0.879|0.867|0.315|0.904|
 |DQN|0.331|0.354|0.333|0.063|0.340|0.334|
 |PPO|0.333|0.316|0.262|0.040|0.302|0.298|
-|MuZero|0.675|0.738|0.646|0.181|0.686|0.665|
+|DQN-GRU (memory)|0.470|0.480|0.454|0.078|0.452|0.469|
+|PPO-Stack (memory)|0.358|0.359|0.343|0.055|0.342|0.355|
+|MuZero (ours)|0.675|0.738|0.646|0.181|0.686|0.665|
 
 ## 14. Prior Bias
 
@@ -378,7 +648,7 @@ Sequential（顺序扫描）、Random（随机扫描）、Belief-Greedy（式(27
 |Sequential|0.899|0.877|
 |Belief-Greedy|0.960|0.960|
 |PPO|0.303|0.319|
-|MuZero|0.679|0.693|
+|MuZero (ours)|0.679|0.693|
 
 - easy: 方法排序Spearman ρ=0.949 (p=0.0513)
 
@@ -390,17 +660,23 @@ Sequential（顺序扫描）、Random（随机扫描）、Belief-Greedy（式(27
 
 ## 16. Computational Cost
 
-- Sequential: 训练总时长=—s（0种子），平均决策时延=0.00ms
+- Sequential: 免训练（规划/启发式），平均决策时延=0.00ms
 
-- Random: 训练总时长=—s（0种子），平均决策时延=0.00ms
+- Random: 免训练（规划/启发式），平均决策时延=0.00ms
 
-- Belief-Greedy: 训练总时长=—s（0种子），平均决策时延=0.00ms
+- Belief-Greedy: 免训练（规划/启发式），平均决策时延=0.00ms
 
-- DQN: 训练总时长=572s（5种子），平均决策时延=0.03ms
+- POMCP (known model): 免训练（规划/启发式），平均决策时延=4.50ms
 
-- PPO: 训练总时长=399s（5种子），平均决策时延=0.04ms
+- DQN: 平均每种子训练时长=572s（5种子），平均决策时延=0.03ms
 
-- MuZero: 训练总时长=11131s（5种子），平均决策时延=6.75ms
+- PPO: 平均每种子训练时长=399s（5种子），平均决策时延=0.04ms
+
+- DQN-GRU (memory): 平均每种子训练时长=357s（5种子），平均决策时延=0.03ms
+
+- PPO-Stack (memory): 平均每种子训练时长=527s（5种子），平均决策时延=0.04ms
+
+- MuZero (ours): 平均每种子训练时长=11114s（5种子），平均决策时延=6.75ms
 
 ## 17. Mechanism Analysis
 

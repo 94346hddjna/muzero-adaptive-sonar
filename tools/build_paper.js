@@ -139,7 +139,11 @@ function figure(imgName, capText, widthInches = 5.5) {
     const alt = path.join(SCHEMATIC_DIR, imgName);
     if (fs.existsSync(alt)) imgPath = alt;
   }
-  if (!fs.existsSync(imgPath)) return [];
+  if (!fs.existsSync(imgPath)) {
+    const alt2 = path.join(ROOT, "results_v3", "figures", "composite", imgName);
+    if (fs.existsSync(alt2)) imgPath = alt2;
+  }
+  if (!fs.existsSync(imgPath)) { console.warn("MISSING FIGURE:", imgName); return []; }
   const img = fs.readFileSync(imgPath);
   const w = Math.round(widthInches * 96);
   const dims = PNG_DIMS[imgName] || [1600, 1000];
@@ -242,13 +246,16 @@ const refs = [
   "[31] Chu Z, Wang F, Lei T, et al. Path planning based on deep reinforcement learning for autonomous underwater vehicles under ocean current disturbance. IEEE Transactions on Intelligent Vehicles, 2023, 8(1): 108-120.",
   "[32] Masmitjà I, Martin M, O'Reilly T, et al. Dynamic robotic tracking of underwater targets using reinforcement learning. Science Robotics, 2023, 8(80): eade7811.",
   "[33] Gulcehre C, Wang Z, Novikov A, et al. RL Unplugged: A suite of benchmarks for offline reinforcement learning. In: Advances in Neural Information Processing Systems. 2020, 33: 7248-7265.",
+  "[34] Silver D, Veness J. Monte-Carlo planning in large POMDPs. In: Advances in Neural Information Processing Systems. 2010, 23: 2164-2172.",
+  "[35] Cho K, van Merriënboer B, Gulcehre C, et al. Learning phrase representations using RNN encoder-decoder for statistical machine translation. In: Proc. Conference on Empirical Methods in Natural Language Processing. 2014: 1724-1734.",
+  "[36] Hausknecht M, Stone P. Deep recurrent Q-learning for partially observable MDPs. In: AAAI Fall Symposium Series. 2015: 29-37.",
 ];
 
 // ===================== 正文 =====================
 const titleText = "MuZero-Based Adaptive Active Sonar Target Detection Strategy: When Does Learned Planning Outperform Reactive Policies?";
 
 const abstractText =
-  "Active sonar target detection under partial observability and noisy detections is a sequential decision problem in which each ping is expensive and information must be exploited efficiently. We study whether a model-based reinforcement learning agent (MuZero) can adaptively plan probing actions more effectively than reactive policies. We formalize the task as a POMDP over N angular sectors with a Bayesian belief filter, and build a two-level sonar simulation environment (a detection-probability abstraction for large-scale training and a signal-level LFM environment with matched filtering for validation). We compare MuZero against Sequential, Random, Belief-Greedy, DQN, and PPO baselines across Easy/Medium/Hard difficulties, five independent seeds, 1000 paired evaluation episodes per condition, and Holm-corrected paired statistical tests. Three findings emerge. First, when a calibrated belief map is directly observable, reactive methods dominate (Belief-Greedy SR=0.96, DQN SR=0.92), and MuZero underperforms (SR=0.61). Second, under a blind-search regime where the belief is not observable, MuZero significantly outperforms all learned baselines (SR=0.68 vs DQN 0.33, PPO 0.30; p<0.001 for all three difficulties), with MCTS contributing +0.18 and GRU memory +0.07 in ablations. Third, Belief-Greedy catastrophically fails under biased priors (SR=0.000 on Hard) while sequential scanning is robust. These results delineate the conditions under which MuZero-style planning pays off: planning matters when observation structure degrades belief sufficiency.";
+  "Active sonar target detection under partial observability and noisy detections is a sequential decision problem in which each ping is expensive and information must be exploited efficiently. We study whether a model-based reinforcement learning agent (MuZero) can adaptively plan probing actions more effectively than reactive policies. We formalize the task as a POMDP over N angular sectors with a Bayesian belief filter, and build a two-level sonar simulation environment (a detection-probability abstraction for large-scale training and a signal-level LFM environment with matched filtering for validation). We compare MuZero against eight baselines — Sequential, Random, Belief-Greedy, DQN, PPO, memory-augmented DQN-GRU and PPO-Stack, and POMCP, an online POMDP planner with access to the true observation model — across Easy/Medium/Hard difficulties, five independent seeds, 1000 paired evaluation episodes per condition, and Holm-corrected paired statistical tests. Four findings emerge. First, when a calibrated belief map is directly observable, reactive methods dominate (Belief-Greedy SR=0.96, DQN SR=0.92), and MuZero underperforms (SR=0.61). Second, under a blind-search regime where the belief is not observable, MuZero significantly outperforms every learned baseline on Medium and Hard (Medium SR=0.679 vs DQN 0.335, PPO 0.303, DQN-GRU 0.448, PPO-Stack 0.339; all Holm p<0.001), and a memory-versus-planning decomposition shows that recurrent memory alone (DQN-GRU) recovers only one-third of the gap over DQN, the remainder coming from MCTS lookahead over the learned model (+0.18 in ablation). Third, POMCP with the true observation model sets an oracle ceiling (Medium SR=0.911), quantifying the headroom that remains for learned models; yet under biased priors (Hard) the same planner collapses (SR=0.173), as does Belief-Greedy (SR=0.000), while MuZero remains the best learned policy (SR=0.278, +0.104 over POMCP, p<0.001). Fourth, the information-free sequential scan is the most robust policy on Hard (SR=0.432) and should not be dismissed as a baseline. These results delineate the conditions under which MuZero-style planning pays off: planning matters when observation structure degrades belief sufficiency, and a learned model is more robust to prior misspecification than exact inference over a wrong prior.";
 
 const keywords = "active sonar; MuZero; reinforcement learning; POMDP; Bayesian belief; Monte-Carlo tree search; sequential detection";
 
@@ -291,7 +298,7 @@ bodyChildren.push(body(
 
 bodyChildren.push(H2("1.4 Contributions"));
 bodyChildren.push(body(
-  "Our contributions are fourfold. (1) We present the first systematic application of MuZero to active sonar target detection, including a complete POMDP formulation, a two-level reproducible simulation environment, and a unified benchmark with five baselines. (2) We provide a boundary characterization — we identify the observation-regime conditions under which model-based planning outperforms reactive policies, and show that reactive methods dominate when belief is directly observable. (3) We demonstrate through ablations that MuZero's advantage in blind search comes from MCTS lookahead and GRU memory, and we confirm the abstraction's validity by Level-1/Level-2 consistency. (4) We openly release the complete codebase, raw experimental data, trained checkpoints, and all analysis at https://github.com/94346hddjna/muzero-adaptive-sonar to support reproducibility."
+  "Our contributions are fourfold. (1) We present the first systematic application of MuZero to active sonar target detection, including a complete POMDP formulation, a two-level reproducible simulation environment, and a unified benchmark with eight baselines spanning heuristics, model-free RL, memory-augmented RL (DQN-GRU, PPO-Stack), and a known-model POMDP planner (POMCP). (2) We provide a boundary characterization — we identify the observation-regime and prior-quality conditions under which model-based planning outperforms reactive policies, and show that reactive and oracle-model methods dominate when a reliable belief is available, while learned planning dominates once priors are misspecified. (3) We demonstrate through ablations and a memory-versus-planning decomposition that MuZero's advantage in blind search comes from MCTS lookahead on top of recurrent memory — memory alone (DQN-GRU) recovers only part of the gap — and we confirm the abstraction's validity by Level-1/Level-2 consistency. (4) We openly release the complete codebase, raw experimental data, trained checkpoints, and all analysis at https://github.com/94346hddjna/muzero-adaptive-sonar to support reproducibility."
 ));
 
 // ================= 2. Methods =================
@@ -607,13 +614,13 @@ bodyChildren.push(eq([
   ] }),
 ], 26));
 bodyChildren.push(body(
-  "where τ is a temperature annealed from 1.0 to 0.25 during training; at evaluation τ = 0 (argmax over visit counts). The root prior is perturbed with Dirichlet noise during training to maintain exploration diversity. We treat MCTS simulation count (25/50/100/200) and planning depth (1/3/5/10) as ablation variables to analyze the performance-computation tradeoff."
+  "where τ is a temperature annealed from 1.0 to 0.25 during training; at evaluation τ = 0 (argmax over visit counts). The root prior is perturbed with Dirichlet noise during training to maintain exploration diversity. The default configuration uses 100 simulations and planning depth 5 (selected on the validation split); we treat simulation count (25/50/100/200) and planning depth (1/3/5/10) as ablation variables to analyze the performance-computation tradeoff."
 ));
 
 // 式(27) 信念贪心
 bodyChildren.push(H2("2.7 Baselines"));
 bodyChildren.push(body(
-  "We compare MuZero against five baselines. Sequential scans sectors in fixed cyclic order. Random samples uniformly at each step. Belief-Greedy picks the sector with the highest current posterior probability:"
+  "We compare MuZero against eight baselines spanning three families: heuristic policies (Sequential, Random, Belief-Greedy), a known-model POMDP planner (POMCP), and model-free learned policies with and without memory (DQN, PPO, DQN-GRU, PPO-Stack). Sequential scans sectors in fixed cyclic order. Random samples uniformly at each step. Belief-Greedy picks the sector with the highest current posterior probability:"
 ));
 bodyChildren.push(eq([
   new OoxmlMath({ children: [
@@ -644,6 +651,12 @@ bodyChildren.push(eq([
 bodyChildren.push(body(
   "where A_t is the advantage estimate and ε is the clip parameter."
 ));
+bodyChildren.push(body(
+  "To isolate the contribution of memory from that of planning, we additionally evaluate two memory-augmented variants of the learned baselines. DQN-GRU replaces the feed-forward Q-network with a GRU [35] (256 units) over the per-step raw observation (action one-hot, detection, normalized time), followed by a Q-head, in the spirit of Deep Recurrent Q-Learning [36] — it receives the same raw observation stream as MuZero and must integrate detection history through its recurrent state. PPO-Stack stacks the last K = 8 raw frames into a 1552-dimensional vector for the actor-critic, the standard frame-stacking remedy for partial observability. Both are trained with the same 2×10⁶ environment-step budget, the same validation-based model selection, and the same five seeds as all other learned methods."
+));
+bodyChildren.push(body(
+  "Finally, we include POMCP [34], a dedicated online POMDP planner, as a known-model reference. POMCP maintains a particle filter (500 particles) over the target sector and plans at each step with PUCT tree search (200 simulations, depth 10, γ = 0.99 — the same selection rule and discount as MuZero's MCTS) using the true observation model, i.e., the exact per-episode detection probability PD and false-alarm probability PFA. POMCP therefore requires information that is unavailable in practice and is never given to any learned method; it serves as an oracle-model upper bound that quantifies the headroom left by model-free and learned-model approaches. We deliberately do not handicap it: if a known-model planner dominates everywhere, that is the honest answer."
+));
 
 // 表3-3 方法对比
 bodyChildren.push(...threeLineTable(
@@ -651,12 +664,15 @@ bodyChildren.push(...threeLineTable(
   [
     ["Sequential", "None", "None", "No", "No", "No"],
     ["Random", "None", "None", "No", "No", "No"],
-    ["Belief-Greedy", "None", "Greedy (1-step)", "Yes", "No", "No"],
-    ["DQN", "None", "Implicit (value fn.)", "Optional (input)", "Yes", "No"],
-    ["PPO", "None", "Implicit (policy grad.)", "Optional (input)", "Yes", "No"],
-    ["MuZero (ours)", "Learned latent", "Explicit (MCTS)", "Yes", "Yes", "Yes"],
+    ["Belief-Greedy", "None", "Greedy (1-step)", "Yes (filter output)", "No", "No"],
+    ["POMCP", "True (oracle)", "Explicit (PUCT)", "Yes (particles)", "No", "Yes"],
+    ["DQN", "None", "Implicit (value fn.)", "No (raw hist.)", "Yes", "No"],
+    ["PPO", "None", "Implicit (policy grad.)", "No (raw hist.)", "Yes", "No"],
+    ["DQN-GRU", "None", "Implicit (value fn.)", "Implicit (GRU state)", "Yes", "No"],
+    ["PPO-Stack", "None", "Implicit (policy grad.)", "Implicit (frame stack)", "Yes", "No"],
+    ["MuZero (ours)", "Learned latent", "Explicit (MCTS)", "Implicit (GRU state)", "Yes", "Yes"],
   ],
-  "Table 3-3 Method comparison (adopted from Table 5 of the proposal)"
+  "Table 3-3 Method comparison (extended from Table 5 of the proposal)"
 ));
 
 // 公平比较
@@ -688,13 +704,13 @@ bodyChildren.push(H2("3.1 Main comparison across three observation regimes"));
 const v1m = data.v1, v2m = data.v2, v3m = data.v3;
 function srCellV(d, algo) {
   const r = d[algo];
-  if (!r || r.sr === null) return "—";
-  return fmt(r.sr);
+  if (!r || r.SR === null || r.SR === undefined) return "—";
+  return fmt(r.SR);
 }
 function adsCellV(d, algo) {
   const r = d[algo];
-  if (!r || r.ads === null) return "n/a";  // 无成功回合时无ADS
-  return fmt(r.ads, 1);
+  if (!r || r.ADS === null || r.ADS === undefined) return "n/a";  // 无成功回合时无ADS
+  return fmt(r.ADS, 1);
 }
 
 bodyChildren.push(...threeLineTable(
@@ -709,15 +725,21 @@ bodyChildren.push(...threeLineTable(
     ["R3 blind", "Sequential", srCellV(v3m.easy, "sequential"), srCellV(v3m.medium, "sequential"), srCellV(v3m.hard, "sequential"), adsCellV(v3m.medium, "sequential")],
     ["", "Random", srCellV(v3m.easy, "random"), srCellV(v3m.medium, "random"), srCellV(v3m.hard, "random"), adsCellV(v3m.medium, "random")],
     ["", "Belief-Greedy", srCellV(v3m.easy, "belief_greedy"), srCellV(v3m.medium, "belief_greedy"), srCellV(v3m.hard, "belief_greedy"), adsCellV(v3m.medium, "belief_greedy")],
+    ["", "POMCP (known model)", srCellV(v3m.easy, "pomcp"), srCellV(v3m.medium, "pomcp"), srCellV(v3m.hard, "pomcp"), adsCellV(v3m.medium, "pomcp")],
     ["", "DQN", srCellV(v3m.easy, "dqn"), srCellV(v3m.medium, "dqn"), srCellV(v3m.hard, "dqn"), adsCellV(v3m.medium, "dqn")],
     ["", "PPO", srCellV(v3m.easy, "ppo"), srCellV(v3m.medium, "ppo"), srCellV(v3m.hard, "ppo"), adsCellV(v3m.medium, "ppo")],
+    ["", "DQN-GRU (memory)", srCellV(v3m.easy, "dqn_gru"), srCellV(v3m.medium, "dqn_gru"), srCellV(v3m.hard, "dqn_gru"), adsCellV(v3m.medium, "dqn_gru")],
+    ["", "PPO-Stack (memory)", srCellV(v3m.easy, "ppo_stack"), srCellV(v3m.medium, "ppo_stack"), srCellV(v3m.hard, "ppo_stack"), adsCellV(v3m.medium, "ppo_stack")],
     ["", "MuZero", srCellV(v3m.easy, "muzero"), srCellV(v3m.medium, "muzero"), srCellV(v3m.hard, "muzero"), adsCellV(v3m.medium, "muzero")],
   ],
-  "Table 3-1 Success rate (SR) and average detection steps (ADS) across three observation regimes (5 seeds, 1000 paired episodes per condition)"
+  "Table 3-1 Success rate (SR) and average detection steps (ADS) across three observation regimes (5 seeds, 1000 paired episodes per condition). Memory-augmented baselines and POMCP were evaluated in the blind-search regime, the paper's main setting."
 ));
 
 bodyChildren.push(body(
-  "Under Regime 1 (belief-informed), reactive methods dominate: Belief-Greedy achieves SR = 0.96 on Medium and DQN SR = 0.92, while MuZero reaches only SR = 0.61. This confirms that when the Bayesian belief is directly observable, the task is nearly Markov and simple reactive exploitation is sufficient. Under Regime 3 (blind search), the picture reverses: MuZero reaches SR = 0.679 on Medium, significantly outperforming DQN (0.335) and PPO (0.303) — a gap of about two-fold. On Easy, MuZero (0.725) still trails Belief-Greedy (0.999) and Sequential (0.999), because the correct concentrated prior makes the greedy policy essentially optimal."
+  "Under Regime 1 (belief-informed), reactive methods dominate: Belief-Greedy achieves SR = 0.96 on Medium and DQN SR = 0.92, while MuZero reaches only SR = 0.61. This confirms that when the Bayesian belief is directly observable, the task is nearly Markov and simple reactive exploitation is sufficient. Under Regime 3 (blind search), the picture reverses for learned methods: MuZero reaches SR = 0.679 on Medium, significantly outperforming DQN (0.335), PPO (0.303), and — critically — the memory-augmented variants DQN-GRU (0.448) and PPO-Stack (0.339) that share MuZero's raw observation stream. The oracle-model POMCP planner reaches 0.911, setting the ceiling for any method that must infer state from raw interactions. On Easy, MuZero (0.725) trails Belief-Greedy (0.999), Sequential (0.999) and POMCP (0.998), because the correct concentrated prior makes greedy exploitation essentially optimal; DQN-GRU (0.820) also edges past MuZero here, though with high seed variance (±0.121)."
+));
+bodyChildren.push(body(
+  "The memory-versus-planning decomposition is informative. Adding recurrence to DQN (DQN → DQN-GRU) raises Medium SR from 0.335 to 0.448 (+0.113), and adding frame stacking to PPO (PPO → PPO-Stack) raises it from 0.303 to 0.339 (+0.036): memory alone recovers roughly one-third of MuZero's advantage over the feed-forward baselines. The remaining two-thirds comes from search over the learned model — consistent with the ablation in Section 3.3, where removing MCTS from MuZero costs −0.18 SR. Under the biased prior of Hard, the ordering inverts in MuZero's favor: Belief-Greedy collapses to 0.000, and the oracle-model POMCP drops to 0.173 because its particle filter is initialized from the wrong prior, while MuZero — trained under domain randomization with biased priors — retains SR = 0.278, significantly above POMCP (+0.104, p < 0.001) and every other learned baseline. Only the information-free Sequential scan (0.432) is more robust, at the cost of ranking below belief-informed methods on Easy/Medium."
 ));
 
 // 图3-1 主对比
@@ -729,23 +751,35 @@ bodyChildren.push(...figure("03_ads_comparison_en.png",
 // ---------- 3.2 统计检验 ----------
 bodyChildren.push(H2("3.2 Statistical significance"));
 bodyChildren.push(body(
-  "Paired statistical tests (Holm-corrected, α=0.05) on the blind-search regime (V3) show that MuZero's advantage over both DQN and PPO is significant in all three difficulties (Table 3-2). The effect sizes are large (Cohen's dz = 0.59–1.08). MuZero also significantly outperforms Random on Easy and Hard, while the difference against Sequential scan is negative (Sequential is information-free and sets a strong floor on SR)."
+  "Paired statistical tests (Holm-corrected, α=0.05, 1000 paired scenarios per condition) on the blind-search regime (V3) confirm the picture (Table 3-2). MuZero's advantage over all four model-free learned baselines (DQN, PPO, DQN-GRU, PPO-Stack) is significant on Medium and Hard, with large effect sizes (Cohen's dz = 0.58–1.07). Against the oracle-model POMCP, MuZero is significantly behind on Easy/Medium (−0.273/−0.232) but significantly ahead on Hard (+0.104) — the biased prior poisons POMCP's particle filter, whereas MuZero's policy, trained under prior randomization, is robust to the misspecification. Against Belief-Greedy the same inversion appears (−0.281 on Medium, +0.278 on Hard). The Sequential scan remains significantly above MuZero on all difficulties, and Random ties MuZero on Medium (p = 0.14, n.s.) — both information-free policies set a robustness floor that learned planning does not yet cross."
 ));
 
 const st = data.stats_v3;
 bodyChildren.push(...threeLineTable(
   ["Comparison (V3)", "Difficulty", "ΔSR", "p (Holm)", "Cohen's dz"],
   [
-    ["MuZero vs DQN", "Easy", "+0.247", "<0.001", "0.857"],
-    ["", "Medium", "+0.344", "<0.001", "1.045"],
-    ["", "Hard", "+0.146", "<0.001", "0.594"],
-    ["MuZero vs PPO", "Easy", "+0.254", "<0.001", "1.079"],
-    ["", "Medium", "+0.376", "<0.001", "1.074"],
-    ["", "Hard", "+0.170", "<0.001", "0.592"],
-    ["MuZero vs Random", "Medium", "+0.016", "0.142 (n.s.)", "0.046"],
+    ["MuZero vs DQN", "Easy", "+0.247", "<0.001", "+0.857"],
+    ["", "Medium", "+0.344", "<0.001", "+1.045"],
+    ["", "Hard", "+0.146", "<0.001", "+0.594"],
+    ["MuZero vs PPO", "Easy", "+0.254", "<0.001", "+1.079"],
+    ["", "Medium", "+0.376", "<0.001", "+1.074"],
+    ["", "Hard", "+0.170", "<0.001", "+0.592"],
+    ["MuZero vs DQN-GRU", "Easy", "−0.095", "<0.001", "−0.404"],
+    ["", "Medium", "+0.230", "<0.001", "+0.587"],
+    ["", "Hard", "+0.179", "<0.001", "+0.745"],
+    ["MuZero vs PPO-Stack", "Easy", "+0.277", "<0.001", "+0.802"],
+    ["", "Medium", "+0.340", "<0.001", "+0.929"],
+    ["", "Hard", "+0.146", "<0.001", "+0.582"],
+    ["MuZero vs POMCP (oracle)", "Easy", "−0.273", "<0.001", "−1.087"],
+    ["", "Medium", "−0.232", "<0.001", "−0.803"],
+    ["", "Hard", "+0.104", "<0.001", "+0.393"],
+    ["MuZero vs Belief-Greedy", "Medium", "−0.281", "<0.001", "−0.882"],
+    ["", "Hard", "+0.278", "<0.001", "+1.398"],
+    ["MuZero vs Random", "Medium", "+0.016", "0.142 (n.s.)", "+0.046"],
     ["MuZero vs Sequential", "Medium", "−0.220", "<0.001", "−0.602"],
+    ["", "Hard", "−0.154", "<0.001", "−0.315"],
   ],
-  "Table 3-2 Paired statistical tests (Holm-corrected) for MuZero vs baselines in blind search (V3)"
+  "Table 3-2 Paired statistical tests (Holm-corrected) for MuZero vs baselines in blind search (V3); full 8-comparison family in the released statistical_tests.csv"
 ));
 
 // ---------- 3.3 消融 ----------
@@ -755,23 +789,24 @@ bodyChildren.push(H2("3.3 Ablation studies"));
 const abl3d = data.abl3;
 // 修复评审发现的bug：主基准SR必须用主实验干净值(0.679)，
 // 不能用消融表中混入M/深度扫描行的平均(那会错算成0.571)
-abl3d.main = v3m.medium.muzero.sr;
+abl3d.main = v3m.medium.muzero.SR;
 const wo_mcts = abl3d.wo_mcts;
 if (wo_mcts) {
+  const dlt = (v) => { const d = v - abl3d.main; return (d >= 0 ? "+" : "−") + fmt(Math.abs(d)); };
   bodyChildren.push(...threeLineTable(
     ["Variant", "SR (Medium)", "Δ vs full"],
     [
       ["MuZero (full)", fmt(abl3d.main), "—"],
-      ["w/o MCTS (policy only)", fmt(wo_mcts.sr), `−${fmt(abl3d.main - wo_mcts.sr)}`],
-      ["w/o GRU memory", fmt(abl3d.wo_memory?.sr), abl3d.wo_memory ? `−${fmt(abl3d.wo_memory.delta)}` : "—"],
-      ["w/o domain randomization", fmt(abl3d.wo_domain_rand?.sr), abl3d.wo_domain_rand ? `−${fmt(abl3d.wo_domain_rand.delta)}` : "—"],
-      ["Shaped reward", fmt(abl3d.shaped?.sr), abl3d.shaped ? `${abl3d.shaped.delta >= 0 ? "−" : "+"}${fmt(Math.abs(abl3d.shaped.delta))}` : "—"],
+      ["w/o MCTS (policy only)", fmt(wo_mcts.sr), dlt(wo_mcts.sr)],
+      ["w/o GRU memory", fmt(abl3d.wo_memory?.sr), abl3d.wo_memory ? dlt(abl3d.wo_memory.sr) : "—"],
+      ["w/o domain randomization", fmt(abl3d.wo_domain_rand?.sr), abl3d.wo_domain_rand ? dlt(abl3d.wo_domain_rand.sr) : "—"],
+      ["Shaped reward", fmt(abl3d.shaped?.sr), abl3d.shaped ? dlt(abl3d.shaped.sr) : "—"],
     ],
     "Table 3-3 MuZero ablation results in blind search (Medium difficulty, V3)"
   ));
 }
 bodyChildren.push(body(
-  "Removing MCTS (using only the policy head without search) degrades MuZero from SR = " + fmt(abl3d.main) + " to " + fmt(wo_mcts.sr) + " (−" + fmt(abl3d.main - wo_mcts.sr) + "), confirming that tree search is the primary contributor to MuZero's advantage (ablation A). Removing GRU memory reduces SR to " + fmt(abl3d.wo_memory.sr) + " (−" + fmt(abl3d.wo_memory.delta) + "), and removing domain randomization reduces it to " + fmt(abl3d.wo_domain_rand.sr) + " (−" + fmt(abl3d.wo_domain_rand.delta) + "). Shaped (potential-based) rewards produce no significant change (+" + fmt(-abl3d.shaped.delta) + "), suggesting the sparse task reward is already well-shaped by the detection objective."
+  "Removing MCTS (using only the policy head without search) degrades MuZero from SR = " + fmt(abl3d.main) + " to " + fmt(wo_mcts.sr) + " (−" + fmt(abl3d.main - wo_mcts.sr) + ", Holm p < 0.001), confirming that tree search is the primary contributor to MuZero's advantage (ablation A). Removing GRU memory reduces SR to " + fmt(abl3d.wo_memory.sr) + " (−" + fmt(abl3d.main - abl3d.wo_memory.sr) + ", p < 0.001), and removing domain randomization reduces it to " + fmt(abl3d.wo_domain_rand.sr) + " (−" + fmt(abl3d.main - abl3d.wo_domain_rand.sr) + ", p < 0.001). Shaped (potential-based) rewards produce no significant change (−" + fmt(abl3d.main - abl3d.shaped.sr) + ", p = 0.11, n.s.), suggesting the sparse task reward is already well-shaped by the detection objective."
 ));
 
 // 表3-4 MCTS模拟次数
@@ -786,7 +821,7 @@ bodyChildren.push(...threeLineTable(
   "Table 3-4 MCTS simulation count vs performance and latency (ablation B, Medium)"
 ));
 bodyChildren.push(body(
-  "MCTS simulation count shows a clear performance-compute tradeoff (Table 3-4): 25 simulations degrade performance sharply (SR drops by −0.43 relative to 50), while increasing from 50 to 100 or 200 provides diminishing returns. The chosen default of 50 sits at a reasonable tradeoff point."
+  "MCTS simulation count shows a clear performance-compute tradeoff (Table 3-4, all at depth 5): dropping to 25 simulations collapses SR to 0.227 (−0.452 vs the 100-simulation default, p < 0.001), and 50 simulations reach only 0.536 (−0.142, p < 0.001). Interestingly, 200 simulations are significantly *worse* than 100 (0.608, −0.070, p < 0.001) at more than double the latency — over-searching an imperfect learned model amplifies its errors, an instance of search-model mismatch. The chosen default of 100 simulations at depth 5 is the empirical optimum. Planning depth (Table 3-5, at 100 simulations) saturates quickly: depth 1 costs −0.129 SR (p < 0.001), while depths 3, 5, and 10 are indistinguishable (paired tests vs the full model: p = 1.0), because the 20-step episode rarely rewards lookahead beyond 3 steps."
 ));
 
 // 表3-5 规划深度
@@ -805,44 +840,70 @@ bodyChildren.push(...threeLineTable(
 bodyChildren.push(...figure("07_muzero_vs_womcts_en.png",
   "Figure 3-3 MuZero with vs without MCTS (ablation A) — MCTS contributes +0.18 SR"));
 bodyChildren.push(...figure("composite_mcts.png",
-  "Figure 3-3 MCTS ablations: (a) simulation count vs SR, (b) simulation count vs latency, (c) planning depth vs SR"));
+  "Figure 3-4 MCTS ablations: (a) simulation count vs SR, (b) simulation count vs latency, (c) planning depth vs SR"));
 bodyChildren.push(...figure("composite_ablations.png",
-  "Figure 3-4 Component ablations: (a) w/o belief, (b) w/o memory, (c) w/o domain randomization, (d) shaped reward"));
+  "Figure 3-5 Component ablations: (a) w/o belief, (b) w/o memory, (c) w/o domain randomization, (d) shaped reward"));
 
 // ---------- 3.4 OOD ----------
 bodyChildren.push(H2("3.4 Out-of-distribution robustness"));
 const ood = data.ood;
+const oodAll = data.ood_all || {};
+const OOD_COND = [["id", "ID (Medium)"], ["ood_snr", "OOD-SNR (+8 dB)"],
+                  ["ood_pfa", "OOD-PFA (0.15)"], ["ood_n", "OOD-N (48 sectors)"],
+                  ["ood_prior", "OOD-Prior (adversarial)"], ["ood_reverb", "OOD-Reverb (+9 dB)"]];
+const OOD_ALGOS = [["sequential", "Sequential"], ["random", "Random"],
+                   ["belief_greedy", "Belief-Greedy"], ["pomcp", "POMCP (known model)"],
+                   ["dqn", "DQN"], ["ppo", "PPO"],
+                   ["dqn_gru", "DQN-GRU (memory)"], ["ppo_stack", "PPO-Stack (memory)"],
+                   ["muzero", "MuZero (ours)"]];
+const oodCell = (c, a) => { const v = (oodAll[c] || {})[a]; return (v == null || v[0] == null || isNaN(v[0])) ? "—" : fmt(v[0]); };
+const oodDrop = (c, a) => {
+  const idv = ((oodAll.id || {})[a] || [])[0], cv = ((oodAll[c] || {})[a] || [])[0];
+  if (idv == null || cv == null || isNaN(idv) || isNaN(cv) || idv <= 0 || c === "id") return "—";
+  const d = (idv - cv) / idv;
+  return (d < 0 ? "improved " : "−") + (d < 0 ? fmt(-d * 100, 0) + "%" : fmt(d * 100, 0) + "%");
+};
 bodyChildren.push(...threeLineTable(
-  ["Condition", "SR (MuZero)", "Drop vs ID"],
-  [
-    ["ID (Medium)", fmt(ood.id?.[0]), "—"],
-    ["OOD-SNR (+8 dB)", fmt(ood.ood_snr?.[0]), "improved"],
-    ["OOD-PFA (0.15)", fmt(ood.ood_pfa?.[0]), "−4%"],
-    ["OOD-N (48 sectors)", fmt(ood.ood_n?.[0]), "−73%"],
-    ["OOD-Prior (adversarial)", fmt(ood.ood_prior?.[0]), "−2%"],
-    ["OOD-Reverb (+9 dB)", fmt(ood.ood_reverb?.[0]), "−1%"],
-  ],
-  "Table 3-6 OOD robustness for MuZero (blind search, V3)"
+  ["Method", "ID", "OOD-SNR", "OOD-PFA", "OOD-N", "OOD-Prior", "OOD-Reverb"],
+  OOD_ALGOS.map(([a, label]) => [label, ...OOD_COND.map(([c]) => oodCell(c, a))]),
+  "Table 3-6 OOD robustness across all methods (blind search, V3; SR per condition, 5 seeds, paired scenarios)"
 ));
 bodyChildren.push(body(
-  "Under OOD-SNR (unseen +8 dB shift), MuZero's SR rises to 0.738 (better-than-ID, as expected from easier detection). Under OOD-PFA (higher false-alarm rate), SR drops slightly to 0.646. Under OOD-Prior (adversarial prior), SR holds at 0.686 — MuZero is robust to prior deception because it does not rely on the belief filter. The critical failure is OOD-N (48 sectors beyond the training maximum of 32): SR drops to 0.181, a −73% degradation shared by all methods, indicating that problem-size generalization remains a common limitation."
+  "Under OOD-SNR (unseen +8 dB shift), MuZero's SR rises to " + fmt(ood.ood_snr?.[0]) + " (better-than-ID, as expected from easier detection). Under OOD-PFA (higher false-alarm rate), SR drops slightly to " + fmt(ood.ood_pfa?.[0]) + ". Under OOD-Prior (adversarial prior), SR holds at " + fmt(ood.ood_prior?.[0]) + " — MuZero is robust to prior deception because its policy does not consume the belief; Table 3-6 shows the same structural immunity for the other blind-search learners, while belief-consuming methods degrade. The critical failure is OOD-N (48 sectors beyond the training maximum of 32): every method degrades sharply (MuZero to " + fmt(ood.ood_n?.[0]) + ", Drop ≈ " + oodDrop("ood_n", "muzero") + "), indicating that problem-size generalization remains a common limitation."
 ));
 bodyChildren.push(...figure("composite_sweeps.png",
-  "Figure 3-9 Continuous difficulty sweeps: (a) SR vs SNR, (b) SR vs P_FA, (c) SR vs number of sectors"));
+  "Figure 3-6 Continuous difficulty sweeps: (a) SR vs SNR, (b) SR vs P_FA, (c) SR vs number of sectors"));
 bodyChildren.push(...figure("15_id_vs_ood_en.png",
-  "Figure 3-10 ID vs OOD performance comparison across all methods (blind search)"));
+  "Figure 3-7 ID vs OOD performance comparison across all methods (blind search)"));
 
 // ---------- 3.5 先验偏差 ----------
 bodyChildren.push(H2("3.5 Prior-bias robustness"));
 bodyChildren.push(...figure("fig3d_sector_grid.png",
-  "Figure 3-10 The sonar sector grid: a circular search area divided into angular sectors, with the target sector highlighted (3D rendering)"));
+  "Figure 3-8 The sonar sector grid: a circular search area divided into angular sectors, with the target sector highlighted (3D rendering)"));
+const pbD = data.prior_bias || {};
+const pbCell = (pt, a) => { const v = (pbD[pt] || {})[a]; return v == null ? "—" : fmt(v); };
+bodyChildren.push(...threeLineTable(
+  ["Method", "Uniform", "Correct", "Biased", "Adversarial", "Prior-sensitive?"],
+  [
+    ["Sequential", pbCell("uniform", "sequential"), pbCell("correct", "sequential"), pbCell("biased", "sequential"), pbCell("adversarial", "sequential"), "No (prior-free)"],
+    ["Random", pbCell("uniform", "random"), pbCell("correct", "random"), pbCell("biased", "random"), pbCell("adversarial", "random"), "No (prior-free)"],
+    ["Belief-Greedy", pbCell("uniform", "belief_greedy"), pbCell("correct", "belief_greedy"), pbCell("biased", "belief_greedy"), pbCell("adversarial", "belief_greedy"), "Yes — collapses"],
+    ["POMCP (known model)", pbCell("uniform", "pomcp"), pbCell("correct", "pomcp"), pbCell("biased", "pomcp"), pbCell("adversarial", "pomcp"), "Yes — degrades"],
+    ["DQN", pbCell("uniform", "dqn"), pbCell("correct", "dqn"), pbCell("biased", "dqn"), pbCell("adversarial", "dqn"), "No (blind)"],
+    ["PPO", pbCell("uniform", "ppo"), pbCell("correct", "ppo"), pbCell("biased", "ppo"), pbCell("adversarial", "ppo"), "No (blind)"],
+    ["DQN-GRU (memory)", pbCell("uniform", "dqn_gru"), pbCell("correct", "dqn_gru"), pbCell("biased", "dqn_gru"), pbCell("adversarial", "dqn_gru"), "No (blind)"],
+    ["PPO-Stack (memory)", pbCell("uniform", "ppo_stack"), pbCell("correct", "ppo_stack"), pbCell("biased", "ppo_stack"), pbCell("adversarial", "ppo_stack"), "No (blind)"],
+    ["MuZero (ours)", pbCell("uniform", "muzero"), pbCell("correct", "muzero"), pbCell("biased", "muzero"), pbCell("adversarial", "muzero"), "No (blind)"],
+  ],
+  "Table 3-2b Success rate under four prior types (Medium base scenarios, 1000 episodes per cell, 5 seeds for stochastic methods). Only methods that consume the prior (Belief-Greedy, POMCP) are affected by prior poisoning; blind-search learned policies are structurally prior-invariant."
+));
 bodyChildren.push(body(
-  "Belief-Greedy fails completely under biased priors on Hard (SR = 0.000): the greedy policy locks onto the wrong sector and cannot escape within the 20-step budget. Sequential scan is unaffected (SR = 0.432) because it ignores the prior. MuZero recovers partially (SR = 0.278 on Hard with biased prior), showing that its learned policy can partially correct a wrong prior through observation history — the KL divergence between belief and true target distribution drops sharply within the first few pings and then plateaus (Figure 3-10), indicating rapid initial correction with slower refinement."
+  "The prior-bias sweep separates the nine methods into two structurally distinct classes (Table 3-2b). Methods that consume the prior degrade as the prior worsens: Belief-Greedy falls from 0.962 (correct) to 0.000 (adversarial), and even POMCP — despite planning on the true observation model — falls from 0.909 to 0.317, because its particle filter is initialized from the poisoned prior and 20 pings are insufficient to wash it out. Blind-search learned policies (DQN, PPO, DQN-GRU, PPO-Stack, MuZero) are structurally prior-invariant: their observation stream contains no belief, so the prior cannot mislead them, and their success rate is unchanged across the four conditions. On the Hard difficulty (biased prior by construction), this structural immunity is exactly what lets MuZero (0.278) surpass both Belief-Greedy (0.000) and POMCP (0.173). The KL-divergence trajectories (Figure 3-9e) show that the belief filter itself does recover within a few pings — the failure of belief-consuming methods is therefore not a filtering failure but a decision-level one: greedy and short-horizon exploitation of a wrong posterior cannot afford the exploration needed to correct it."
 ));
 bodyChildren.push(...figure("fig_prior_bias_combined.png",
-  "Figure 3-11 Prior-bias robustness: (a)-(d) four initial belief types over 16 sectors, (e) KL divergence correction over pings, (f) success rate under different priors"));
+  "Figure 3-9 Prior-bias robustness: (a)-(d) four initial belief types over 16 sectors, (e) KL divergence correction over pings, (f) success rate under different priors"));
 bodyChildren.push(...figure("17b_kl_correction_en.png",
-  "Figure 3-12 Belief correction over pings: KL divergence from true target under different initial priors"));
+  "Figure 3-10 Belief correction over pings: KL divergence from true target under different initial priors"));
 
 bodyChildren.push(...figure("schematic_two_level_env.png",
   "Figure 2-3 The two-level sonar simulation environment: Level 1 detection-probability abstraction vs Level 2 signal-level simulation"));
@@ -853,7 +914,7 @@ bodyChildren.push(body(
   `The signal-level environment (Level 2) produces the same method rankings as the abstract Level-1 environment: Spearman rank correlation ρ = ${fmt(l2.easy?.spearman_rho)} (Easy), ${fmt(l2.medium?.spearman_rho)} (Medium), ${fmt(l2.hard?.spearman_rho)} (Hard). The detection-probability abstraction is therefore a valid proxy for signal-level behavior, supporting the use of Level 1 for large-scale RL training.`
 ));
 bodyChildren.push(...figure("22_level1_vs_level2_en.png",
-  "Figure 3-13 Level-1 vs Level-2 environment comparison (method rankings consistent)"));
+  "Figure 3-11 Level-1 vs Level-2 environment comparison (method rankings consistent)"));
 
 // ---------- 3.7 机理分析 ----------
 bodyChildren.push(H2("3.7 Mechanism analysis"));
@@ -861,47 +922,54 @@ bodyChildren.push(body(
   "Comparing the raw network policy prior p(a|s) against the MCTS-improved policy π(a|s) shows that tree search sharpens the distribution toward higher-value sectors, confirming that the search is not merely noise (Figure 3-13). The MCTS root visit distribution concentrates on the sectors with highest posterior, and the trajectory visualization shows the agent systematically sweeping and re-checking after missed detections."
 ));
 bodyChildren.push(...figure("fig3d_belief_evolution.png",
-  "Figure 3-14 Belief evolution over pings: the belief distribution sharpens from uniform to a single peak as evidence accumulates (3D rendering)"));
+  "Figure 3-12 Belief evolution over pings: the belief distribution sharpens from uniform to a single peak as evidence accumulates (3D rendering)"));
 bodyChildren.push(...figure("composite_mechanism.png",
-  "Figure 3-14 Mechanism analysis: (a) belief evolution heatmap, (b) search trajectory, (c) MCTS root visit distribution, (d) raw network policy vs MCTS-improved policy"));
+  "Figure 3-13 Mechanism analysis: (a) belief evolution heatmap, (b) search trajectory, (c) MCTS root visit distribution, (d) raw network policy vs MCTS-improved policy"));
 
 // ---------- 3.8 计算成本 ----------
 bodyChildren.push(H2("3.8 Computational cost"));
+const tcost = data.train_cost_h || {};
+const latOf = (a) => { const r = v3m.medium[a]; return r && r.MeanDecisionLatencyMs != null ? r.MeanDecisionLatencyMs : null; };
+const latCell = (a) => { const v = latOf(a); return v == null ? "—" : (v < 0.05 ? "<0.05" : fmt(v, 2)); };
+const wallCell = (a) => tcost[a] != null ? fmt(tcost[a], 2) : "—";
 bodyChildren.push(...threeLineTable(
   ["Method", "Decision latency (ms)", "Training wall-clock (h/seed)"],
   [
-    ["Sequential", "<0.01", "—"],
-    ["Random", "<0.01", "—"],
-    ["Belief-Greedy", "<0.01", "—"],
-    ["DQN", "<0.1", "0.2"],
-    ["PPO", "<0.1", "0.1"],
-    ["MuZero", "6.7", "2.5"],
+    ["Sequential", latCell("sequential"), "—"],
+    ["Random", latCell("random"), "—"],
+    ["Belief-Greedy", latCell("belief_greedy"), "—"],
+    ["POMCP (known model)", latCell("pomcp"), "— (planner)"],
+    ["DQN", latCell("dqn"), wallCell("dqn")],
+    ["PPO", latCell("ppo"), wallCell("ppo")],
+    ["DQN-GRU (memory)", latCell("dqn_gru"), wallCell("dqn_gru")],
+    ["PPO-Stack (memory)", latCell("ppo_stack"), wallCell("ppo_stack")],
+    ["MuZero (ours)", latCell("muzero"), wallCell("muzero")],
   ],
-  "Table 3-7 Computational cost comparison (Medium difficulty)"
+  "Table 3-7 Computational cost comparison (Medium difficulty; latency = per-step action-selection time; wall-clock = cumulative training time per seed, 2×10⁶ env steps)"
 ));
 bodyChildren.push(body(
-  "MuZero's advantage comes at a cost: its per-step decision latency is about 6.7 ms versus <0.1 ms for DQN/PPO (a factor of ~220), driven by MCTS with 50 simulations and depth-5 planning. Training wall-clock is also higher (2.5 h/seed vs 0.2 h/seed for DQN). This performance-compute tradeoff is the price of lookahead planning and must be weighed against the detection gain."
+  "MuZero's advantage comes at a cost: its per-step decision latency is " + fmt(latOf("muzero"), 1) + " ms versus <0.05 ms for the feed-forward baselines (a factor of ~200), driven by MCTS with 100 simulations and depth-5 planning; training wall-clock is 3.1 h/seed versus 0.10–0.16 h/seed for the model-free methods. POMCP, the other search-based method, shows the same cost profile (4.5 ms/step), confirming that lookahead planning — not the learned model per se — is the source of the latency. This performance-compute tradeoff is the price of planning and must be weighed against the detection gain."
 ));
 bodyChildren.push(...figure("09_sims_vs_latency_en.png",
-  "Figure 3-16 MCTS simulation count vs decision latency (performance-compute tradeoff)"));
+  "Figure 3-14 MCTS simulation count vs decision latency (performance-compute tradeoff)"));
 bodyChildren.push(...figure("21_sr_latency_tradeoff_en.png",
-  "Figure 3-17 Success rate vs decision latency tradeoff across methods"));
+  "Figure 3-15 Success rate vs decision latency tradeoff across methods"));
 
 // ---------- 3.9 训练曲线 ----------
 bodyChildren.push(H2("3.9 Training dynamics"));
 bodyChildren.push(body(
-  "Training curves (Figure 3-18) show the learning dynamics of the three learned methods over 2×10⁶ environment steps. DQN converges fastest and most stably in the belief-fed regime; PPO improves slowly; MuZero's validation success rate climbs steadily but does not plateau within the budget, indicating that longer training may close part of the gap in Regime 1. In Regime 3, MuZero converges to a higher validation success rate than DQN and PPO."
+  "Training curves (Figure 3-16) show the learning dynamics of the five learned methods over 2×10⁶ environment steps. DQN converges fastest and most stably in the belief-fed regime; PPO improves slowly; MuZero's validation success rate climbs steadily but does not plateau within the budget, indicating that longer training may close part of the gap in Regime 1. In Regime 3 (blind search), MuZero converges to the highest validation success rate, followed by DQN-GRU and PPO-Stack — the recurrent and frame-stacked variants clearly surpass their feed-forward counterparts but remain well below MuZero, mirroring the test-time ordering."
 ));
 bodyChildren.push(...figure("01_training_curves_en.png",
-  "Figure 3-18 Training curves (episode return and training success rate vs environment steps)"));
+  "Figure 3-16 Training curves (episode return and training success rate vs environment steps)"));
 
 // ---------- 3.10 案例研究 ----------
 bodyChildren.push(H2("3.10 Case studies"));
 bodyChildren.push(body(
-  "We examine four representative episodes: (Case 1) correct prior + low noise, where all methods detect quickly; (Case 2) wrong prior + high noise, where MuZero recovers through observation while Belief-Greedy fails; (Case 3) consecutive misses, where the agent persists and re-checks; and (Case 4) a false alarm, where the policy correctly revisits and re-evaluates. The belief heatmaps and search trajectories (Figures 3-19 to 3-22) show how each policy's probing logic differs."
+  "We examine four representative episodes: (Case 1) correct prior + low noise, where all methods detect quickly; (Case 2) wrong prior + high noise, where MuZero recovers through observation while Belief-Greedy fails; (Case 3) consecutive misses, where the agent persists and re-checks; and (Case 4) a false alarm, where the policy correctly revisits and re-evaluates. The belief heatmaps and search trajectories (Figure 3-17) show how each policy's probing logic differs."
 ));
 bodyChildren.push(...figure("composite_cases.png",
-  "Figure 3-19 Four case studies: (a) correct prior + low noise, (b) wrong prior + high noise, (c) consecutive misses, (d) false alarm"));
+  "Figure 3-17 Four case studies: (a) correct prior + low noise, (b) wrong prior + high noise, (c) consecutive misses, (d) false alarm"));
 
 // ================= 4. Discussion =================
 bodyChildren.push(H1("4. Discussion"));
@@ -918,23 +986,26 @@ bodyChildren.push(body(
 
 bodyChildren.push(H2("4.3 The role of MCTS and memory"));
 bodyChildren.push(body(
-  "Ablation A shows that MCTS contributes +0.18 SR in blind search — the single largest component. Ablation E shows GRU memory contributes +0.07. Together they explain why MuZero wins when observation is degraded: the GRU accumulates evidence over pings, and MCTS evaluates multi-step consequences of probing choices. Neither alone is sufficient; the combination is."
+  "Two independent lines of evidence decompose MuZero's advantage into memory and planning. Within MuZero itself, ablation A (removing MCTS at evaluation) costs −0.18 SR and ablation E (removing GRU memory) costs −0.07 SR in blind search. Across methods, the memory-augmented baselines bound the value of memory without planning: DQN-GRU recovers +0.11 SR over DQN on Medium, and PPO-Stack +0.04 over PPO — together roughly one-third of MuZero's +0.34 advantage over the feed-forward baselines. The remaining two-thirds is attributable to lookahead over the learned model. The agreement between the within-agent ablation and the cross-agent comparison strengthens the causal attribution: it is the combination of recurrent state and tree search, not either alone, that closes the gap to the oracle planner."
+));
+bodyChildren.push(body(
+  "The POMCP comparison further clarifies the value of model knowledge. With the true observation model, POMCP reaches SR = 0.911 on Medium — the effective ceiling — while the best model-free method reaches only 0.448 and MuZero reaches 0.679. In other words, MuZero's learned model recovers about two-thirds of the oracle gap between DQN and POMCP ((0.679−0.335)/(0.911−0.335) ≈ 0.60) without ever observing the model. When the prior is misspecified (Hard), the direction reverses: exact particle-filter inference over a wrong prior (POMCP 0.173, Belief-Greedy 0.000) is brittle, whereas the learned policy — exposed to prior bias during domain-randomized training — degrades gracefully (0.278). Learned robustness and oracle accuracy are complementary strengths; the choice between them is a deployment decision about which assumption is safer: an approximately known model, or a distributionally robust policy."
 ));
 
 bodyChildren.push(H2("4.4 Limitations"));
 bodyChildren.push(body(
-  "Several limitations must be noted. First, the learned baselines do not include memory-augmented variants (e.g., DQN with GRU over history, PPO with frame stacking) or dedicated POMDP planners (e.g., POMCP, DESPOT) — MuZero's advantage over these alternatives remains to be tested, and we note this as important future work. Second, the environment is a stylized two-level abstraction with parameterized acoustic models — it does not simulate real ocean bathymetry or full waveform physics. Second, the action space is discrete sector selection; continuous beam steering and waveform parameter optimization are left as future work. Third, all methods degrade sharply at N = 48 (OOD-N), indicating limited generalization to larger problem scales. Fourth, MuZero's compute cost (6.7 ms per decision, ~220× DQN) may be prohibitive for real-time sonar without engineering optimization. Fifth, the initial priors are synthetic; field priors from sonar operators may differ in shape."
+  "Several limitations must be noted. First, the environment is a stylized two-level abstraction with parameterized acoustic models — it does not simulate real ocean bathymetry or full waveform physics. Second, the action space is discrete sector selection; continuous beam steering and waveform parameter optimization are left as future work. Third, all methods degrade sharply at N = 48 (OOD-N), indicating limited generalization to larger problem scales. Fourth, MuZero's compute cost (6.7 ms per decision, ~220× DQN) may be prohibitive for real-time sonar without engineering optimization. Fifth, the initial priors are synthetic; field priors from sonar operators may differ in shape. Sixth, our planner comparison uses POMCP as the representative online POMDP solver; anytime planners with stronger sample efficiency (e.g., DESPOT, PFT-DPW) might close more of the oracle gap, although we stress that POMCP already had access to the true observation model — an advantage no deployable method possesses. The memory-augmented baselines (DQN-GRU, PPO-Stack) received one hyperparameter pass inherited from their feed-forward counterparts; per-method tuning could shift individual numbers, but the qualitative ordering was stable across five seeds and three difficulties."
 ));
 
 bodyChildren.push(H2("4.5 Implications for adaptive sonar design"));
 bodyChildren.push(body(
-  "The practical implication is a conditional design rule: use reactive policies when a well-calibrated belief is available; switch to MuZero-style planning when the observation structure degrades belief sufficiency — for example, when the detection probability is unknown a priori, when priors are adversarial, or when the sensor cannot maintain a reliable belief filter. The sequential scan, despite being information-free, sets a robust floor and should not be dismissed as a baseline."
+  "The practical implication is a conditional design rule. Use reactive policies (Belief-Greedy) when a well-calibrated belief filter is available and the prior is trustworthy; if the observation model itself is known precisely, an online POMDP planner such as POMCP is near-optimal and training-free. Switch to MuZero-style learned planning when belief sufficiency is degraded — when the detection probability is unknown or drifting, when priors may be biased or adversarial, or when the sensor cannot maintain a reliable filter. Finally, keep the sequential scan in the toolbox: being information-free, it is immune to prior poisoning and sets a robust floor (Hard SR = 0.432) that no learned method in our study crossed."
 ));
 
 // ================= 5. Conclusion =================
 bodyChildren.push(H1("5. Conclusion"));
 bodyChildren.push(body(
-  "We have presented the first systematic application of MuZero to active sonar target detection, with a complete POMDP formulation, a two-level simulation environment, and a rigorous evaluation protocol (five seeds, paired scenarios, Holm-corrected statistical tests). Our results show that MuZero's advantage is conditional on the observation regime: when belief is directly observable, reactive methods win; when the agent must infer target state from raw interaction history, MuZero significantly outperforms all learned baselines (ΔSR +0.15 to +0.38, p < 0.001). The contribution is not a new algorithm but a boundary characterization — a map of when learned planning pays off in active sonar search. Future work will extend to continuous beam steering, waveform parameter adaptation, moving targets, multi-target scenarios, and real sea trials."
+  "We have presented the first systematic application of MuZero to active sonar target detection, with a complete POMDP formulation, a two-level simulation environment, and a rigorous evaluation protocol (eight baselines including a known-model POMDP planner and memory-augmented RL, five seeds, paired scenarios, Holm-corrected statistical tests). Our results show that MuZero's advantage is conditional on the observation regime and prior quality: when belief is directly observable, reactive methods win; when the agent must infer target state from raw interaction history, MuZero significantly outperforms all learned baselines (Medium ΔSR = +0.23 to +0.38 over the strongest learned competitors, p < 0.001), recovers about 60% of the oracle gap to a true-model POMCP planner, and is uniquely robust to biased priors among non-trivial policies (Hard SR = 0.278 vs POMCP 0.173, Belief-Greedy 0.000). The contribution is not a new algorithm but a boundary characterization — a map of when learned planning pays off in active sonar search — together with an open, reproducible benchmark. Future work will extend to continuous beam steering, waveform parameter adaptation, moving targets, multi-target scenarios, and real sea trials."
 ));
 
 // ================= Declarations =================

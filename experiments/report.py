@@ -14,9 +14,7 @@ import numpy as np
 from utils import hardware as hw
 from utils.io_utils import read_json
 
-ALGO_NAMES = {"sequential": "Sequential", "random": "Random",
-              "belief_greedy": "Belief-Greedy", "dqn": "DQN", "ppo": "PPO",
-              "muzero": "MuZero"}
+from experiments.tables import ALGOS, ALGO_NAMES
 
 
 def _load(path: Path) -> List[Dict]:
@@ -122,7 +120,7 @@ def run_report(results_root: Path, smoke: bool = False) -> Dict:
     if main:
         L.append("| 方法 | SR(Easy) | SR(Medium) | SR(Hard) | ADS(Medium) | EDC(Medium) | FAR(Medium) |")
         L.append("|---|---|---|---|---|---|---|")
-        for algo in ["sequential", "random", "belief_greedy", "dqn", "ppo", "muzero"]:
+        for algo in ALGOS:
             e = _agg(main, algo, "SR", "easy")[0]
             m = _agg(main, algo, "SR", "medium")[0]
             h = _agg(main, algo, "SR", "hard")[0]
@@ -185,7 +183,7 @@ def run_report(results_root: Path, smoke: bool = False) -> Dict:
         L.append("（OOD相对退化见processed/ood_drop.csv，式(35)）\n")
         L.append("| 方法 | ID SR | OOD-SNR | OOD-PFA | OOD-N | OOD-Prior | OOD-Reverb |")
         L.append("|---|---|---|---|---|---|---|")
-        for algo in ["sequential", "random", "belief_greedy", "dqn", "ppo", "muzero"]:
+        for algo in ALGOS:
             row = [ALGO_NAMES[algo]]
             for cond in ["id", "ood_snr", "ood_pfa", "ood_n", "ood_prior", "ood_reverb"]:
                 mu, _, _ = _agg(ood, algo, "SR", cond)
@@ -221,7 +219,7 @@ def run_report(results_root: Path, smoke: bool = False) -> Dict:
     # 计算成本
     L.append("## 16. Computational Cost\n")
     runtime_rows = []
-    for algo in ["sequential", "random", "belief_greedy", "dqn", "ppo", "muzero"]:
+    for algo in ALGOS:
         walls = []
         for f in (results_root / "checkpoints").glob(f"{algo}/main_seed*/"):
             p = list(f.glob("*_summary.json"))
@@ -232,8 +230,11 @@ def run_report(results_root: Path, smoke: bool = False) -> Dict:
         lat, _, _ = _agg(main, algo, "MeanDecisionLatencyMs", "medium")
         runtime_rows.append((ALGO_NAMES[algo], walls, lat))
     for name, walls, lat in runtime_rows:
-        L.append(f"- {name}: 训练总时长={_fmt(np.mean(walls) if walls else None, 0)}s"
-                 f"（{len(walls)}种子），平均决策时延={_fmt(lat, 2)}ms\n")
+        if walls:
+            L.append(f"- {name}: 平均每种子训练时长={_fmt(np.mean(walls), 0)}s"
+                     f"（{len(walls)}种子），平均决策时延={_fmt(lat, 2)}ms\n")
+        else:
+            L.append(f"- {name}: 免训练（规划/启发式），平均决策时延={_fmt(lat, 2)}ms\n")
     # 机理
     L.append("## 17. Mechanism Analysis\n")
     mech = results_root / "raw" / "mechanism"
@@ -337,7 +338,7 @@ def _final_summary(results_root, main, abl, tests, ood, pb, l2, sanity, status, 
         S.append("- 主实验未完成，无MuZero测试结果。\n")
     S.append("\n## 4-8. 与各基线比较（Medium难度成功率）\n")
     if main:
-        for algo in ["sequential", "random", "belief_greedy", "dqn", "ppo"]:
+        for algo in [a for a in ALGOS if a != "muzero"]:
             a, b = sr("muzero"), sr(algo)
             if a is not None and b is not None:
                 diff = a - b

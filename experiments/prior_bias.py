@@ -48,6 +48,8 @@ def run_prior_bias(results_root: Path, env_cfg: Dict, device: str, smoke: bool,
             entries.append({"algorithm": algo, "seed": 0})
         for seed in seeds:
             entries.append({"algorithm": "random", "seed": seed})
+        for seed in seeds:
+            entries.append({"algorithm": "pomcp", "seed": seed})  # 已知模型规划器
         for algo in suite.RL_ALGOS:
             for seed in seeds:
                 entries.append({"algorithm": algo, "seed": seed, "alg_cfg": load_section(algo, smoke)})

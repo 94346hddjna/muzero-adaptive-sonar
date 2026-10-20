@@ -43,7 +43,15 @@ def experiment_running():
 
 
 def is_complete():
-    return (R3 / "FINAL_SUMMARY.md").exists()
+    # 当前处于"新基线补跑"阶段：以新基线训练全部完成为准
+    # dqn_gru×5 + ppo_stack×5 的summary都存在才算完
+    from pathlib import Path
+    for algo in ["dqn_gru", "ppo_stack"]:
+        for seed in [101, 102, 103, 104, 105]:
+            p = R3 / "checkpoints" / algo / f"main_seed{seed}" / f"{algo}_main_seed{seed}_summary.json"
+            if not p.exists():
+                return False
+    return True
 
 
 def launch():

@@ -60,7 +60,15 @@ cal = json.load(open(ROOT / "results_v3" / "raw" / "calibration.json"))
 train_log = load_csv(ROOT / "results_v3" / "checkpoints" / "muzero" / "main_seed101"
                      / "muzero_main_seed101_training_log.csv")
 
-ALGOS = ["sequential", "random", "belief_greedy", "dqn", "ppo", "muzero"]
+ALGOS = ["sequential", "random", "belief_greedy", "pomcp",
+         "dqn", "ppo", "dqn_gru", "ppo_stack", "muzero"]
+
+
+def agg_pb(rows, algo, pt):
+    v = [fval(r["SR"]) for r in rows
+         if r.get("algorithm") == algo and r.get("prior_type") == pt and r["SR"]]
+    v = [x for x in v if x is not None]
+    return float(np.mean(v)) if v else None
 
 
 def full_metrics(rows):
@@ -81,13 +89,15 @@ def ablation_summary(abl, cond="medium"):
     for M in [25, 50, 100, 200]:
         vals = [fval(r["SR"]) for r in abl if r["algorithm"] == "muzero"
                 and r["condition"] == cond
-                and f'"num_simulations": {M}' in str(r.get("eval_options", "")).replace(".0", "")]
+                and f'"num_simulations": {M}' in str(r.get("eval_options", "")).replace(".0", "")
+                and '"planning_depth": 5' in str(r.get("eval_options", "")).replace(".0", "")]
         vals = [v for v in vals if v is not None]
         if vals:
             out[f"M{M}"] = {"sr": float(np.mean(vals)), "std": float(np.std(vals))}
         lat = [fval(r["MeanDecisionLatencyMs"]) for r in abl if r["algorithm"] == "muzero"
                and r["condition"] == cond
-               and f'"num_simulations": {M}' in str(r.get("eval_options", "")).replace(".0", "")]
+               and f'"num_simulations": {M}' in str(r.get("eval_options", "")).replace(".0", "")
+               and '"planning_depth": 5' in str(r.get("eval_options", "")).replace(".0", "")]
         lat = [v for v in lat if v is not None]
         if lat and f"M{M}" in out:
             out[f"M{M}"]["lat_ms"] = float(np.mean(lat))
@@ -95,7 +105,8 @@ def ablation_summary(abl, cond="medium"):
     for D in [1, 3, 5, 10]:
         vals = [fval(r["SR"]) for r in abl if r["algorithm"] == "muzero"
                 and r["condition"] == cond
-                and f'"planning_depth": {D}' in str(r.get("eval_options", "")).replace(".0", "")]
+                and f'"planning_depth": {D}' in str(r.get("eval_options", "")).replace(".0", "")
+                and '"num_simulations": 100' in str(r.get("eval_options", "")).replace(".0", "")]
         vals = [v for v in vals if v is not None]
         if vals:
             out[f"D{D}"] = {"sr": float(np.mean(vals)), "std": float(np.std(vals))}
@@ -133,6 +144,21 @@ def sweep_data(rows, sweep_name):
     return {k: float(np.mean(v)) for k, v in out.items()}
 
 
+# 训练成本（小时/种子，summary中为跨会话累计值）
+import glob as _glob
+train_cost = {}
+for _a in ["dqn", "ppo", "dqn_gru", "ppo_stack", "muzero"]:
+    _walls = []
+    for _f in sorted(_glob.glob(str(ROOT / "results_v3" / "checkpoints" / _a / "main_seed*" / "*_summary.json"))):
+        try:
+            _d = json.load(open(_f))
+            if _d.get("training_wall_clock_sec"):
+                _walls.append(float(_d["training_wall_clock_sec"]))
+        except Exception:
+            pass
+    if _walls:
+        train_cost[_a] = float(np.mean(_walls)) / 3600.0
+
 data = {
     "v1": full_metrics(main1),
     "v2": full_metrics(main2),
@@ -142,7 +168,8 @@ data = {
     "l2_consistency": l2_consistency,
     "calibration": cal,
     "stats_v3": {f"{c}_{a}": get_stat(c, a) for c in ["easy", "medium", "hard"]
-                  for a in ["sequential", "random", "belief_greedy", "dqn", "ppo"]
+                  for a in ["sequential", "random", "belief_greedy", "pomcp",
+                          "dqn", "ppo", "dqn_gru", "ppo_stack"]
                   if get_stat(c, a)},
     "sweep_snr": sweep_data(rob3, "snr"),
     "sweep_pfa": sweep_data(rob3, "pfa"),
@@ -151,6 +178,9 @@ data = {
             ["id", "ood_snr", "ood_pfa", "ood_n", "ood_prior", "ood_reverb"]},
     "ood_all": {c: {a: agg(ood3, a, c, "SR") for a in ALGOS} for c in
                 ["id", "ood_snr", "ood_pfa", "ood_n", "ood_prior", "ood_reverb"]},
+    "prior_bias": {pt: {a: agg_pb(pb3, a, pt) for a in ALGOS}
+                   for pt in ["uniform", "correct", "biased", "adversarial"]},
+    "train_cost_h": train_cost,
     "train_log": [{"env_steps": int(r["env_steps"]), "success_rate": fval(r["success_rate"]),
                    "episode_return": fval(r["episode_return"])} for r in train_log],
 }

@@ -25,12 +25,21 @@ from experiments.evaluate import AgentActWrapper, BaselineActWrapper, run_evalua
 from utils import metrics as mt
 from utils.io_utils import JsonlWriter, write_json
 
-RL_ALGOS = ["dqn", "ppo", "muzero"]
-BASELINES = ["sequential", "random", "belief_greedy"]
+RL_ALGOS = ["dqn", "ppo", "muzero", "dqn_gru", "ppo_stack"]
+POMDP_PLANNER = ["pomcp"]
+BASELINES = ["sequential", "random", "belief_greedy", "pomcp"]
 ALL_ALGOS = BASELINES + RL_ALGOS
 
 
 def algo_obs_mode(env_cfg: Dict, algorithm: str, variant: str = "main") -> str:
+    """观测模式分配。v3：muzero/dqn_gru用raw(194维)，dqn/ppo用raw_stack(3861维)，
+    pomcp用belief（粒子滤波需要）。"""
+    if algorithm == "dqn_gru":
+        return "raw"
+    if algorithm == "pomcp":
+        return "belief"
+    if algorithm == "ppo_stack":
+        return "raw"
     """v3按算法分配观测模式（与train_rl._algo_obs_mode一致）。"""
     if variant == "wo_belief":
         return "raw"
@@ -47,6 +56,20 @@ def build_agent(algorithm: str, variant: str, alg_cfg: Dict, env_cfg: Dict,
         return MuZeroAgent(alg_cfg, D, canonical_cells, device=device,
                            obs_mode=obs_mode, use_memory=(variant != "wo_memory"),
                            seed=seed)
+    if algorithm == "dqn_gru":
+        from agents.dqn_gru import DQNGRUAgent
+        from env.level1_env import obs_dim as _od
+        return DQNGRUAgent(alg_cfg, _od(canonical_cells, "raw"), canonical_cells,
+                           device=device, seed=seed, obs_mode="raw")
+    if algorithm == "ppo_stack":
+        from agents.ppo_stack import PPOStackAgent
+        from env.level1_env import obs_dim as _od
+        # ppo_stack用raw_stack观测（3861维），内部堆叠
+        return PPOStackAgent(alg_cfg, 194, stack_k=8, device=device, seed=seed)
+    if algorithm == "pomcp":
+        from agents.pomcp import POMCPAgent
+        # 预注册配置（对基线公平取强配置）：K=500粒子/M=200模拟/D=10深度
+        return POMCPAgent(n_particles=500, n_simulations=200, depth=10, seed=seed)
     if algorithm == "dqn":
         return DQNAgent(alg_cfg, D, canonical_cells, device=device, seed=seed,
                         obs_mode=obs_mode)
