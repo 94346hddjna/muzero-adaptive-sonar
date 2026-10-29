@@ -186,9 +186,11 @@ def run_tables(results_root: Path, smoke: bool = False) -> Dict:
         made["table3"] = True
     # ---- Table 4: MCTS消融（A/B/C） ----
     if abl:
-        rows4 = [["MuZero (M=50, D=5)"]]
+        # 主基准行：必须用主实验干净值（消融CSV的main行混入了M/D扫描行，
+        # 口径与论文表3-3一致：main_results.csv 主测试值）
+        rows4 = [["MuZero (M=100, D=5)"]]
         for cond in ["easy", "medium", "hard"]:
-            mu, sd = _alg_mean_std(abl, "muzero", "SR", cond, "main")
+            mu, sd = _alg_mean_std(main, "muzero", "SR", cond, "main")
             rows4[0].append(f"{_fmt(mu)}±{_fmt(sd)}" if mu is not None else "—")
         # w/o MCTS
         row = ["w/o MCTS"]
